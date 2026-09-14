@@ -1,5 +1,5 @@
-import AppSplash from "@/app/features/startup/components/AppSplash";
+import { Redirect } from "expo-router";
 
 export default function Index() {
-  return <AppSplash />;
+  return <Redirect href="/(tabs)/explore" />;
 }

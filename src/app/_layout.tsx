@@ -1,49 +1,14 @@
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
+﻿import { Stack } from "expo-router";
 
-import { Stack } from "expo-router";
+import { useStartup } from "@/app/features/startup/hooks/useStartup";
+import AppSplash from "@/app/features/startup/components/AppSplash";
 
-import { useEffect } from "react";
+export default function RootLayout() {
+  const { ready } = useStartup();
 
+  if (!ready) {
+    return <AppSplash />;
+  }
 
-SplashScreen.preventAutoHideAsync();
-
-
-export default function RootLayout(){
-
- const [loaded] = useFonts({
-
-   "Lora-Regular":
-      require("@/assets/fonts/Lora-Regular.ttf"),
-
-
-   "Lora-Bold":
-      require("@/assets/fonts/Lora-Bold.ttf"),
-
- });
-
-
- useEffect(()=>{
-
-   if(loaded){
-     SplashScreen.hideAsync();
-   }
-
- },[loaded]);
-
-
-
- if(!loaded){
-   return null;
- }
-
-
- return (
-   <Stack
-    screenOptions={{
-      headerShown:false
-    }}
-   />
- );
-
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
