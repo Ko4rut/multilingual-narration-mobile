@@ -4,7 +4,7 @@
     "slug": "multilingual-narration-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/branding/app-icon.png",
     "scheme": "multilingualnarrationmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -19,6 +19,11 @@
       },
       "predictiveBackGestureEnabled": false
     },
+    "splash": {
+      "image": "./assets/images/branding/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4EFE6"
+    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -32,7 +37,8 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
