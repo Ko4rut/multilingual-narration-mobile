@@ -2,11 +2,7 @@ import { useEffect, useRef } from "react";
 import { StyleSheet } from "react-native";
 import WebView, { WebViewMessageEvent } from "react-native-webview";
 
-type LeafletMapProps = {
-  latitude?: number;
-  longitude?: number;
-  onSelect?: (latitude: number, longitude: number) => void;
-};
+import type { LeafletMapProps, MapCoordinate } from "../types";
 
 const mapHtml = `
 <!doctype html>
@@ -97,9 +93,7 @@ export function LeafletMap({
 }: LeafletMapProps) {
   const webViewRef = useRef<WebView>(null);
   const webViewLoadedRef = useRef(false);
-  const latestLocationRef = useRef<
-    { latitude: number; longitude: number } | undefined
-  >(undefined);
+  const latestLocationRef = useRef<MapCoordinate | undefined>(undefined);
 
   function updateLocationOnMap(latitude: number, longitude: number) {
     if (!webViewLoadedRef.current) {
