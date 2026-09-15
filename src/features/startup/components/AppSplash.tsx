@@ -10,7 +10,7 @@ import { useSplashLoading } from "../hooks/useSplashLoading";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
-
+import { startupImages } from "@/features/startup/constants/startup-assets";
 
 export default function AppSplash() {
 
@@ -37,9 +37,7 @@ export default function AppSplash() {
       >
 
         <Image
-          source={
-            require("@/assets/images/branding/splash-logo.png")
-          }
+          source={startupImages.splashLogo}
           style={styles.image}
           resizeMode="contain"
         />

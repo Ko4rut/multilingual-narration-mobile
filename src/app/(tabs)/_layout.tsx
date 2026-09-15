@@ -1,52 +1,12 @@
-import { Tabs } from "expo-router";
+import AppTabs from "@/components/app-tabs";
+
 
 export default function TabLayout(){
 
- return (
+  return (
 
-  <Tabs>
+    <AppTabs />
 
-    <Tabs.Screen
-      name="explore"
-      options={{
-        title:"Explore"
-      }}
-    />
-
-
-    <Tabs.Screen
-      name="map"
-      options={{
-        title:"Map"
-      }}
-    />
-
-
-    <Tabs.Screen
-      name="qr-scan"
-      options={{
-        title:"QR Scan"
-      }}
-    />
-
-
-    <Tabs.Screen
-      name="offline"
-      options={{
-        title:"Offline"
-      }}
-    />
-
-
-    <Tabs.Screen
-      name="settings"
-      options={{
-        title:"Settings"
-      }}
-    />
-
-  </Tabs>
-
- );
+  );
 
 }
