@@ -35,6 +35,10 @@
         }
       ],
       "expo-font"
+      ,[
+        "expo-location",
+        { "locationWhenInUsePermission": "Cho phép ứng dụng dùng vị trí để hiển thị bạn trên bản đồ." }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -33,9 +33,16 @@ export default function AppSplash() {
     opacity,
   } = useSplashLoading();
 
+  let splashOpacity: number;
+  if (imageReady || imageError) {
+    splashOpacity = 1;
+  } else {
+    splashOpacity = 0;
+  }
+
   return (
     <ThemedView
-      style={[styles.container, { opacity: imageReady || imageError ? 1 : 0 }]}
+      style={[styles.container, { opacity: splashOpacity }]}
     >
       <View
         style={styles.imageContainer}
@@ -95,26 +102,31 @@ export default function AppSplash() {
         <View
           style={styles.dots}
         >
-          {[0, 1, 2].map((dot) => (
+          {[0, 1, 2].map((dot) => {
+            let backgroundColor: string;
+            let dotOpacity: number | Animated.Value;
 
-            <Animated.View
-              key={dot}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    activeDot === dot
-                      ? theme.colors.primary
-                      : theme.colors.primaryLight,
+            if (activeDot === dot) {
+              backgroundColor = theme.colors.primary;
+              dotOpacity = opacity;
+            } else {
+              backgroundColor = theme.colors.primaryLight;
+              dotOpacity = 1;
+            }
 
-                  opacity:
-                    activeDot === dot
-                      ? opacity
-                      : 1,
-                },
-              ]}
-            />
-          ))}
+            return (
+              <Animated.View
+                key={dot}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor,
+                    opacity: dotOpacity,
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
 
         <ThemedText

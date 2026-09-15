@@ -24,25 +24,8 @@ export function useSplashLoading() {
 
 
   const opacity = useRef(
-    new Animated.Value(0)
+    new Animated.Value(0.4)
   ).current;
-
-
-
-  useEffect(() => {
-
-    const timer = setInterval(() => {
-
-      setActiveDot(
-        (prev) => (prev + 1) % DOT_COUNT
-      );
-
-    }, DOT_INTERVAL);
-
-
-    return () => clearInterval(timer);
-
-  }, []);
 
 
 
@@ -77,15 +60,16 @@ export function useSplashLoading() {
 
   useEffect(() => {
 
-    const animation = Animated.loop(
+    let cancelled = false;
+    opacity.setValue(0.4);
 
-      Animated.sequence([
+    const animation = Animated.sequence([
 
         Animated.timing(opacity, {
 
           toValue: 1,
 
-          duration: 700,
+          duration: DOT_INTERVAL / 2,
 
           useNativeDriver: true,
 
@@ -96,26 +80,30 @@ export function useSplashLoading() {
 
           toValue: 0.4,
 
-          duration: 700,
+          duration: DOT_INTERVAL / 2,
 
           useNativeDriver: true,
 
         }),
 
-      ])
-
-    );
+      ]);
 
 
-    animation.start();
+    // Advance only after this dot completes its pulse.
+    animation.start(({ finished }) => {
+      if (finished && !cancelled) {
+        setActiveDot((prev) => (prev + 1) % DOT_COUNT);
+      }
+    });
 
 
     return () => {
+      cancelled = true;
       animation.stop();
     };
 
 
-  }, [opacity]);
+  }, [activeDot, opacity]);
 
 
 
