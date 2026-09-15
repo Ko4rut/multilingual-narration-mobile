@@ -1,6 +1,7 @@
 ﻿import { Stack } from "expo-router";
 
 import * as SystemUI from "expo-system-ui";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Button, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
@@ -8,9 +9,16 @@ import { useTheme } from "@/hooks/use-theme";
 import { useStartup } from "@/features/startup/hooks/useStartup";
 import AppSplash from "@/features/startup/components/AppSplash";
 
+void SplashScreen.preventAutoHideAsync().catch(console.warn);
+
 export default function RootLayout() {
   const { ready, error, retry } = useStartup();
   const theme = useTheme();
+
+  useEffect(() => {
+    // Startup can finish before AppSplash displays, or fail before it mounts.
+    if (ready || error) SplashScreen.hide();
+  }, [ready, error]);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(theme.colors.background).catch((error) => {

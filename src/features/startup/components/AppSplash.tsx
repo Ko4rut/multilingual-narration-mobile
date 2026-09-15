@@ -1,11 +1,14 @@
 import {
   Animated,
-  Image,
+  Button,
   StyleSheet,
   View,
 } from "react-native";
 
 import { useSplashLoading } from "../hooks/useSplashLoading";
+import { Image } from "expo-image";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect, useState } from "react";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -15,7 +18,14 @@ import { startupImages } from "@/features/startup/constants/startup-assets";
 export default function AppSplash() {
 
   const theme = useTheme();
+  const [imageReady, setImageReady] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageAttempt, setImageAttempt] = useState(0);
 
+  useEffect(() => {
+    // Reveal the React splash only after its image has actually been displayed.
+    if (imageReady || imageError) SplashScreen.hide();
+  }, [imageReady, imageError]);
 
   const {
     activeDot,
@@ -23,34 +33,40 @@ export default function AppSplash() {
     opacity,
   } = useSplashLoading();
 
-
-
   return (
-
     <ThemedView
-      style={styles.container}
+      style={[styles.container, { opacity: imageReady || imageError ? 1 : 0 }]}
     >
-
-
       <View
         style={styles.imageContainer}
       >
 
         <Image
+          key={imageAttempt}
           source={startupImages.splashLogo}
           style={styles.image}
-          resizeMode="contain"
+          contentFit="contain"
+          transition={0}
+          onDisplay={() => setImageReady(true)}
+          onError={() => setImageError(true)}
         />
 
+        {imageError && (
+          <View style={StyleSheet.absoluteFill}>
+            <ThemedText>Không thể tải hình ảnh splash.</ThemedText>
+            <Button title="Thử lại" onPress={() => {
+              setImageError(false);
+              setImageReady(false);
+              setImageAttempt((value) => value + 1);
+            }} />
+          </View>
+        )}
+
       </View>
-
-
 
       <View
         style={styles.content}
       >
-
-
         <ThemedText
           style={[
             theme.typography.title,
@@ -62,8 +78,6 @@ export default function AppSplash() {
           Narration System
 
         </ThemedText>
-
-
 
         <ThemedText
           color="textSecondary"
@@ -78,12 +92,9 @@ export default function AppSplash() {
 
         </ThemedText>
 
-
-
         <View
           style={styles.dots}
         >
-
           {[0, 1, 2].map((dot) => (
 
             <Animated.View
@@ -103,13 +114,8 @@ export default function AppSplash() {
                 },
               ]}
             />
-
           ))}
-
-
         </View>
-
-
 
         <ThemedText
           color="textSecondary"
@@ -118,21 +124,13 @@ export default function AppSplash() {
             styles.loadingText,
           ]}
         >
-
           {loadingText}
-
         </ThemedText>
-
-
       </View>
-
-
     </ThemedView>
 
   );
 }
-
-
 
 const styles = StyleSheet.create({
 
