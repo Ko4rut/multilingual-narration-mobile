@@ -1,13 +1,7 @@
 ﻿import { useCallback, useEffect, useState } from "react";
-import { Asset } from "expo-asset";
 import { loadAsync as loadFontsAsync } from "expo-font";
-import { Image } from "expo-image";
 import { loadTabIcons } from "@/constants/tab-icons";
-import { startupImages } from "../constants/startup-assets";
-
-function mock_delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+import { loadStartupImages } from "../services/startup-images";
 
 export function useStartup() {
   const [ready, setReady] = useState(false);
@@ -24,22 +18,13 @@ export function useStartup() {
 
     async function prepare() {
       try {
-        const splashAsset =
-          Asset.fromModule(
-            startupImages.splashLogo
-          );
         await Promise.all([
           loadFontsAsync({
             "Lora-Regular": require("@/assets/fonts/Lora-Regular.ttf"),
             "Lora-Bold": require("@/assets/fonts/Lora-Bold.ttf"),
           }),
-          Asset.loadAsync(startupImages.splashLogo),
-          Image.prefetch(
-            splashAsset.uri
-          ),
+          loadStartupImages(),
           loadTabIcons(),
-
-          mock_delay(5000)
         ]);
         if (!cancelled) setReady(true);
       } catch (cause) {
