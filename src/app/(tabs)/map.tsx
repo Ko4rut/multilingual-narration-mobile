@@ -1,1 +1,1 @@
-export { default } from "@/features/map/components/MapScreen";
+export { default } from "@/features/map/components/MapController";
