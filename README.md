@@ -25,15 +25,23 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Run the installed Android app
 
-When you're ready, run:
+After building and installing the Android app once with `npm run android`, start Metro and open it with:
 
 ```bash
-npm run reset-project
+npm run start:android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This uses the installed development build. Rebuild with `npm run android` when native dependencies or native configuration change. Keep the Windows project path short (for example, `E:\mobile`) to avoid native build path-length issues.
+
+### Native maps
+
+The Android/iOS map uses `@maplibre/maplibre-react-native` with OpenStreetMap raster tiles and GPS from `expo-location`. No API key is required for the current tile source. The web build shows a message instead of a native map.
+
+After installing dependencies, run `npm run android` once to build and install MapLibre into the app. Then use `npm run start:android` for daily development. Expo Go cannot load this native library. Android Studio can also open the generated `android` project to build the APK; Metro is still needed for JavaScript in debug builds.
+
+The MapLibre config plugin is registered in `app.json` for future Expo prebuilds. For production traffic, configure a tile service suitable for your usage and retain its attribution.
 
 ### Other setup steps
 
