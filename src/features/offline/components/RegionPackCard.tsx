@@ -89,7 +89,7 @@ export function RegionPackCard({ pack }: Props) {
               style={[
                 styles.downloadIconCircle,
                 {
-                  backgroundColor: theme.colors.white,
+                  backgroundColor: theme.colors.surface,
                   borderRadius: theme.radius.pill,
                 },
               ]}
