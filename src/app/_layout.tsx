@@ -4,6 +4,7 @@ import * as SystemUI from "expo-system-ui";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Button, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 import { useStartup } from "@/features/startup/hooks/useStartup";
@@ -41,9 +42,11 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{
-      headerShown: false,
-      contentStyle: { backgroundColor: theme.colors.background },
-    }} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+      }} />
+    </GestureHandlerRootView>
   );
 }

@@ -1,6 +1,4 @@
-import type { StyleSpecification }
-from "@maplibre/maplibre-react-native";
-
+import type { StyleSpecification } from "@maplibre/maplibre-react-native";
 
 export const OPEN_STREET_MAP_STYLE: StyleSpecification = {
   version: 8,
@@ -8,21 +6,17 @@ export const OPEN_STREET_MAP_STYLE: StyleSpecification = {
   sources: {
     openstreetmap: {
       type: "raster",
-
-      tiles: [
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      ],
-
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
       tileSize: 256,
       maxzoom: 19,
     },
   },
 
-  layers:[
+  layers: [
     {
-      id:"openstreetmap-layer",
-      type:"raster",
-      source:"openstreetmap",
-    }
+      id: "openstreetmap-layer",
+      type: "raster",
+      source: "openstreetmap",
+    },
   ],
 };

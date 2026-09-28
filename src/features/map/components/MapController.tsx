@@ -1,132 +1,72 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import {
-  useUserLocation,
-} from "../hooks/useUserLocation";
+import { useTheme } from "@/hooks/use-theme";
 
-import {
-  useMapCamera,
-} from "../hooks/useMapCamera";
+import { useUserLocation } from "../hooks/useUserLocation";
 
-import {
-  MapLibreMap,
-} from "./MapLibreMap";
+import { useMapCamera } from "../hooks/useMapCamera";
 
-import {
-  FocusLocationButton,
-} from "./FocusLocationButton";
+import { MapLibreMap } from "./MapLibreMap";
 
-import {
-  LocationLoading,
-} from "./LocationLoading";
+import { FocusLocationButton } from "./FocusLocationButton";
 
+import { LocationLoading } from "./LocationLoading";
+
+import BottomSheet, { BOTTOM_SHEET_COLLAPSED_HEIGHT } from "./BottomSheet";
 
 export default function MapController() {
+  const theme = useTheme();
 
-  const {
-    location,
-    permission,
-  } = useUserLocation();
+  const { location, permission } = useUserLocation();
 
-
-  const {
-    cameraRef,
-    focusLocation,
-  } = useMapCamera();
-
-
+  const { cameraRef, focusLocation } = useMapCamera();
 
   if (permission === "denied") {
-
-    return (
-      <Text>
-        Cần cấp quyền vị trí để hiển thị GPS
-      </Text>
-    );
-
+    return <Text> Cần cấp quyền vị trí để hiển thị GPS </Text>;
   }
 
-
   if (!location) {
-
-    return (
-      <LocationLoading />
-    );
-
+    return <LocationLoading />;
   }
 
   const userLocation = location;
 
-
-
   function handleFocusUser() {
-
-    focusLocation(
-      userLocation.coords.latitude,
-      userLocation.coords.longitude
-    );
-
-
+    focusLocation(userLocation.coords.latitude, userLocation.coords.longitude);
   }
 
-
   return (
-
     <View style={styles.container}>
-
       <MapLibreMap
-
-        latitude={
-          location.coords.latitude
-        }
-
-        longitude={
-          location.coords.longitude
-        }
-
-        cameraRef={
-          cameraRef
-        }
-
+        latitude={location.coords.latitude}
+        longitude={location.coords.longitude}
+        cameraRef={cameraRef}
       />
 
-
-      <View style={styles.controls}>
-
-        <FocusLocationButton
-
-          onPress={
-            handleFocusUser
-          }
-
-        />
-
+      <View
+        style={[
+          styles.controls,
+          {
+            right: theme.spacing.md + theme.spacing.xs,
+            bottom: BOTTOM_SHEET_COLLAPSED_HEIGHT + theme.spacing.md,
+          },
+        ]}
+      >
+        <FocusLocationButton onPress={handleFocusUser} />
       </View>
 
+      <BottomSheet />
     </View>
-
   );
-
 }
 
-
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
   },
 
-
   controls: {
     position: "absolute",
-
-    right: 20,
-
-    bottom: 40,
+    zIndex: 1,
   },
-
 });
