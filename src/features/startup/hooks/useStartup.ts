@@ -1,6 +1,7 @@
-﻿import { useCallback, useEffect, useState } from "react";
+﻿import { loadTabIcons } from "@/constants/tab-icons";
+import { FontFamily } from "@/constants/theme";
 import { loadAsync as loadFontsAsync } from "expo-font";
-import { loadTabIcons } from "@/constants/tab-icons";
+import { useCallback, useEffect, useState } from "react";
 import { loadStartupImages } from "../services/startup-images";
 
 export function useStartup() {
@@ -20,8 +21,8 @@ export function useStartup() {
       try {
         await Promise.all([
           loadFontsAsync({
-            "Lora-Regular": require("@/assets/fonts/Lora-Regular.ttf"),
-            "Lora-Bold": require("@/assets/fonts/Lora-Bold.ttf"),
+            [FontFamily.regular]: require("@/assets/fonts/Lora-Regular.ttf"),
+            [FontFamily.bold]: require("@/assets/fonts/Lora-Bold.ttf"),
           }),
           loadStartupImages(),
           loadTabIcons(),
@@ -35,7 +36,9 @@ export function useStartup() {
     }
 
     void prepare();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [attempt]);
 
   return { ready, error, retry };
