@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 type PoiCardProps = {
   poi: {
+    id: string;
     name: string;
     description: string;
     imageUrl: string;
