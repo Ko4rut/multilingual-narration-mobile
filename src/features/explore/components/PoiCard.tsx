@@ -1,10 +1,13 @@
 import { Image } from "expo-image";
-import { SymbolView } from "expo-symbols";
+import { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type LayoutChangeEvent,
   type PressableStateCallbackType,
 } from "react-native";
 
@@ -22,12 +25,133 @@ type PoiCardProps = {
   onPress?(poi: PoiCardProps["poi"]): void;
 };
 
+const MARQUEE_INITIAL_DELAY = 800;
+const MARQUEE_REPEAT_DELAY = 15000;
+const MARQUEE_MINIMUM_DURATION = 4000;
+const MARQUEE_SPEED = 32;
+
 // Dùng mét cho địa điểm gần và kilomet cho địa điểm từ 1 km trở lên.
 function formatDistance(distanceMeters: number) {
   if (distanceMeters < 1000) return `${distanceMeters}m`;
   return `${(distanceMeters / 1000).toFixed(1)}km`;
 }
 
+// COMPONENT TẠO THẺ DANH MỤC CÓ NỀN TRẮNG
+function CategoryBadge({ category }: { category: string }) {
+  const theme = useTheme();
+  return (
+    <View
+      style={[
+        styles.categoryBadge,
+        {
+          backgroundColor: theme.colors.background, 
+          borderRadius: theme.radius.sm,
+          paddingHorizontal: theme.spacing.sm,
+          paddingVertical: 4,
+        },
+      ]}
+    >
+      <Text
+        numberOfLines={1}
+        style={[
+          theme.typography.caption,
+          { color: theme.colors.textSecondary, fontWeight: '600' },
+        ]}
+      >
+        {category}
+      </Text>
+    </View>
+  );
+}
+
+// COMPONENT ĐO CHIỀU RỘNG DÃY DANH MỤC
+function CategorySequence({ categories, onLayout }: { categories: string[]; onLayout?: (event: LayoutChangeEvent) => void }) {
+  const theme = useTheme();
+  return (
+    <View
+      onLayout={onLayout}
+      style={[styles.categorySequence, { gap: theme.spacing.xs }]}
+    >
+      {categories.map((category, index) => (
+        <CategoryBadge category={category} key={`${category}-${index}`} />
+      ))}
+    </View>
+  );
+}
+
+function CategoryMarquee({ categories }: { categories: string[] }) {
+  const theme = useTheme();
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const marqueeGap = theme.spacing.xs;
+  const isOverflowing = contentWidth > viewportWidth && viewportWidth > 0;
+
+  function handleViewportLayout(event: LayoutChangeEvent) {
+    setViewportWidth(Math.ceil(event.nativeEvent.layout.width));
+  }
+
+  function handleContentLayout(event: LayoutChangeEvent) {
+    setContentWidth(Math.ceil(event.nativeEvent.layout.width));
+  }
+
+  useEffect(() => {
+    translateX.stopAnimation();
+    translateX.setValue(0);
+
+    if (!isOverflowing) return undefined;
+
+    const travelDistance = contentWidth + marqueeGap;
+    const duration = Math.max(
+      MARQUEE_MINIMUM_DURATION,
+      (travelDistance / MARQUEE_SPEED) * 1000
+    );
+    const marqueeCycle = Animated.sequence([
+      Animated.timing(translateX, {
+        duration,
+        easing: Easing.linear,
+        isInteraction: false,
+        toValue: -travelDistance,
+        useNativeDriver: true,
+      }),
+      Animated.delay(MARQUEE_REPEAT_DELAY),
+    ]);
+    const animation = Animated.sequence([
+      Animated.delay(MARQUEE_INITIAL_DELAY),
+      Animated.loop(marqueeCycle),
+    ]);
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+      translateX.setValue(0);
+    };
+  }, [contentWidth, isOverflowing, marqueeGap, translateX]);
+
+  return (
+    <View onLayout={handleViewportLayout} style={styles.categoriesViewport}>
+      <Animated.View
+        style={[
+          styles.categoriesTrack,
+          {
+            gap: marqueeGap,
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <CategorySequence categories={categories} onLayout={handleContentLayout} />
+        {isOverflowing ? (
+          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <CategorySequence categories={categories} />
+          </View>
+        ) : null}
+      </Animated.View>
+    </View>
+  );
+}
+
+// COMPONENT CHÍNH CỦA POI CARD
 export function PoiCard({ poi, onPress }: PoiCardProps) {
   const theme = useTheme();
 
@@ -46,35 +170,7 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
     ];
   }
 
-  function renderCategory(category: string) {
-    return (
-      <View
-        key={category}
-        style={[
-          styles.categoryBadge,
-          {
-            backgroundColor: theme.colors.surface,
-            borderRadius: theme.radius.sm,
-            paddingHorizontal: theme.spacing.sm,
-            paddingVertical: theme.spacing.xs,
-          },
-        ]}
-      >
-        <Text
-          numberOfLines={1}
-          style={[
-            theme.typography.overline,
-            { color: theme.colors.textSecondary },
-          ]}
-        >
-          {category}
-        </Text>
-      </View>
-    );
-  }
-
   return (
-    // Toàn bộ card là vùng nhấn để mở trang chi tiết POI.
     <Pressable
       accessibilityHint="Opens details and narration for this point of interest"
       accessibilityLabel={`${poi.name}, ${formatDistance(poi.distanceMeters)} away`}
@@ -82,7 +178,6 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
       onPress={handlePress}
       style={getCardStyle}
     >
-      {/* Ảnh đại diện của POI được crop để luôn lấp đầy khung vuông. */}
       <Image
         accessibilityLabel={`Photo of ${poi.name}`}
         contentFit="cover"
@@ -103,35 +198,25 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
           { marginLeft: theme.spacing.sm + theme.spacing.xs },
         ]}
       >
-        {/* Hàng metadata gồm nhiều category bên trái và khoảng cách bên phải. */}
         <View style={[styles.metaRow, { gap: theme.spacing.sm }]}>
-          <View style={[styles.categories, { gap: theme.spacing.xs }]}>
-            {/* Một POI có thể thuộc nhiều category nên render toàn bộ thành badge. */}
-            {poi.categories.map(renderCategory)}
-          </View>
+          
+          <CategoryMarquee categories={poi.categories} />
 
-          <View
-            style={[
-              styles.distance,
-              {
-                gap: theme.spacing.xs,
-                paddingTop: theme.spacing.xs,
-              },
-            ]}
-          >
-            <SymbolView
-              name={{
-                ios: "mappin.circle.fill",
-                android: "location_on",
-                web: "location_on",
+          <View style={styles.distance}>
+            <Image
+              source={require("@/assets/images/tabIcons/map-pin.png")}
+              style={{
+                width: 14,
+                height: 14,
+                tintColor: theme.colors.primaryDark,
+                marginRight: 4,
               }}
-              size={16}
-              tintColor={theme.colors.primaryDark}
+              contentFit="contain"
             />
             <Text
               style={[
-                theme.typography.overline,
-                { color: theme.colors.primaryDark },
+                theme.typography.label,
+                { color: theme.colors.primaryDark, fontSize: 13 },
               ]}
             >
               {formatDistance(poi.distanceMeters)}
@@ -139,13 +224,12 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
           </View>
         </View>
 
-        {/* Tên và mô tả giới hạn một dòng để các card giữ bố cục đồng đều. */}
+        {/* Tên và mô tả POI */}
         <Text
           numberOfLines={1}
           style={[
             theme.typography.sectionTitle,
-            { marginTop: theme.spacing.sm },
-            { color: theme.colors.textPrimary },
+            { marginTop: 6, color: theme.colors.textPrimary },
           ]}
         >
           {poi.name}
@@ -155,8 +239,7 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
           numberOfLines={1}
           style={[
             theme.typography.caption,
-            { marginTop: theme.spacing.xs },
-            { color: theme.colors.textSecondary },
+            { marginTop: 4, color: theme.colors.textSecondary },
           ]}
         >
           {poi.description}
@@ -183,15 +266,23 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center", 
   },
-  categories: {
+  categoriesViewport: {
     flex: 1,
+    overflow: "hidden",
+  },
+  categoriesTrack: {
+    alignSelf: "flex-start",
     flexDirection: "row",
-    flexWrap: "wrap",
+  },
+  categorySequence: {
+    flexDirection: "row",
+    flexShrink: 0,
   },
   categoryBadge: {
     maxWidth: 128,
+    justifyContent: "center",
   },
   distance: {
     flexDirection: "row",

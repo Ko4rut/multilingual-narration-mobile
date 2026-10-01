@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Image, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Image, ImageBackground, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { MOCK_POIS } from '../data/mock-pois';
 import { PoiCard } from './PoiCard';
@@ -11,43 +11,56 @@ import { useTheme } from '@/hooks/use-theme';
 export default function ExploreScreen() {
   const router = useRouter();
   const theme = useTheme();
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* PHẦN HEADER */}
-        <View style={styles.headerContainer}>
-          <Image 
-            source={require('@/assets/images/tabIcons/hero-banner.png')} 
-            style={styles.headerImage}
-            resizeMode="cover"
-          />
-        </View>
+        <ImageBackground 
+          source={require('@/assets/images/banner-image.png')} 
+          style={styles.headerContainer}
+          resizeMode="cover"
+        >
+          <View style={styles.bannerContent}>
+            <ThemedText 
+              color="textPrimary" 
+              style={[theme.typography.heroTitle, styles.bannerTitle]}
+            >
+              Multilingual{'\n'}
+              Automatic{'\n'}
+              Narration System
+            </ThemedText>
+          </View>
+        </ImageBackground>
 
         <View style={styles.contentContainer}>
           
           {/* THANH TÌM KIẾM */}
           <View style={[
             styles.searchContainer, 
-            { backgroundColor: theme.colors.surface || '#EAE4D3' } 
+            { backgroundColor: theme.colors.surface }
           ]}>
             <Image 
               source={require('@/assets/images/tabIcons/search.png')} 
               style={[styles.searchIconImage, { tintColor: theme.colors.textMuted }]} 
             />
             <TextInput 
-              style={[styles.searchInput, { color: theme.colors.textPrimary }]}
+              style={[styles.searchInput, theme.typography.body, { color: theme.colors.textPrimary }]} 
               placeholder="Search point of interest..."
               placeholderTextColor={theme.colors.textMuted} 
             />
           </View>
 
-          {/* TIÊU ĐỀ DANH SÁCH  */}
+          {/* TIÊU ĐỀ DANH SÁCH */}
           <View style={styles.sectionHeader}>
-            <ThemedText color="textPrimary" style={styles.sectionTitle}>
+            <ThemedText 
+              color="textPrimary" 
+              style={[theme.typography.heading, { marginBottom: theme.spacing.xs }]}
+            >
               Points of Interest near you
             </ThemedText>
-            <ThemedText color="textSecondary" style={styles.sectionSubtitle}>
+            <ThemedText color="textSecondary" style={theme.typography.subtitle}>
               Narrations trigger automatically as you walk
             </ThemedText>
           </View>
@@ -79,12 +92,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    height: 200, 
+    height: 240, 
     width: '100%',
   },
-  headerImage: {
-    width: '100%',
-    height: '100%',
+  bannerContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    justifyContent: 'center', 
+  },
+  bannerTitle: {
+    marginTop: 50,
+    letterSpacing: 0.5,
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -94,7 +112,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EAE4D3', 
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,
@@ -104,23 +121,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
-    tintColor: '#666', 
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: '#333',
   },
   sectionHeader: {
     marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
   },
   listContainer: {
     gap: 15,

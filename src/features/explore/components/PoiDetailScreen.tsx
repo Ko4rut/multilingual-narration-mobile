@@ -16,9 +16,9 @@ export default function PoiDetailScreen() {
   if (!poi) {
     return (
       <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ThemedText color="textPrimary" style={{ fontSize: 18 }}>Không tìm thấy địa điểm!</ThemedText>
+        <ThemedText color="textPrimary" style={theme.typography.heading}>Không tìm thấy địa điểm!</ThemedText>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
-          <Text style={{ color: '#6B8E23', fontWeight: 'bold' }}>Quay lại</Text>
+          <Text style={[theme.typography.bodyStrong, { color: theme.colors.primaryDark }]}>Quay lại</Text>
         </TouchableOpacity>
       </ThemedView>
     );
@@ -50,63 +50,69 @@ export default function PoiDetailScreen() {
           {/* TIÊU ĐỀ & KHOẢNG CÁCH */}
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
-              <ThemedText color="textPrimary" style={styles.title}>{poi.name}</ThemedText>
-              <ThemedText color="textSecondary" style={styles.address} numberOfLines={1}>
+              <ThemedText color="textPrimary" style={[theme.typography.heading, styles.title]}>
+                {poi.name}
+              </ThemedText>
+              <ThemedText color="textSecondary" style={theme.typography.supporting} numberOfLines={1}>
                 {poi.categories.join(' • ')}
               </ThemedText>
             </View>
             
-            <View style={styles.distanceBadge}>
+            <View style={[styles.distanceBadge, { backgroundColor: theme.colors.surface }]}>
               <Image 
                 source={require('@/assets/images/tabIcons/map-pin.png')} 
-                style={styles.locationIcon} 
+                style={[styles.locationIcon, { tintColor: theme.colors.primaryDark }]} 
               />
-              <Text style={styles.distanceText}>{formattedDistance}</Text>
+              <Text style={[theme.typography.label, { color: theme.colors.primaryDark }]}>
+                {formattedDistance}
+              </Text>
             </View>
           </View>
 
           {/* TRÌNH PHÁT AUDIO */}
           <View style={[
             styles.audioPlayerCard, 
-            { backgroundColor: theme.colors.surface || '#EAE4D3' }
+            { backgroundColor: theme.colors.surface }
           ]}>
             <View style={styles.audioHeader}>
               <View style={styles.audioInfo}>
-                <ThemedText color="textPrimary" style={styles.audioTitle}>
+                <ThemedText color="textPrimary" style={[theme.typography.sectionTitle, styles.audioTitle]}>
                   {poi.name} - Narration - EN
                 </ThemedText>
-                <ThemedText color="textMuted" style={styles.audioSubtitle}>
+                <ThemedText color="textMuted" style={theme.typography.caption}>
                   Narrated by System
                 </ThemedText>
               </View>
               
-              <TouchableOpacity activeOpacity={0.8}>
-                <Image 
-                  source={require('@/assets/images/tabIcons/player-actions.png')} 
-                  style={styles.playButtonImage}
-                />
+              {/* NÚT PLAY  */}
+              <TouchableOpacity activeOpacity={0.8} style={styles.playButtonCircle}>
+                <View style={styles.playTriangle} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.progressContainer}>
               <View style={[
                 styles.progressBarBackground, 
-                { backgroundColor: theme.colors.border || '#D1CDBF' }
+                { backgroundColor: theme.colors.border }
               ]}>
-                <View style={styles.progressBarFill} /> 
+                <View style={[styles.progressBarFill, { backgroundColor: theme.colors.primaryDark }]} /> 
               </View>
               <View style={styles.timeRow}>
-                <ThemedText color="textMuted" style={styles.timeText}>0:00</ThemedText>
-                <ThemedText color="textMuted" style={styles.timeText}>2:15</ThemedText>
+                <ThemedText color="textMuted" style={theme.typography.caption}>0:00</ThemedText>
+                <ThemedText color="textMuted" style={theme.typography.caption}>2:15</ThemedText>
               </View>
             </View>
           </View>
 
           {/* NỘI DUNG THUYẾT MINH */}
           <View style={styles.scriptSection}>
-            <ThemedText color="textPrimary" style={styles.scriptTitle}>Historic Narration Script</ThemedText>
-            <ThemedText color="textSecondary" style={styles.scriptParagraph}>{poi.description}</ThemedText>
-            <ThemedText color="textSecondary" style={styles.scriptParagraph}>
+            <ThemedText color="textPrimary" style={[theme.typography.sectionTitle, styles.scriptTitle]}>
+              Historic Narration Script
+            </ThemedText>
+            <ThemedText color="textSecondary" style={[theme.typography.body, styles.scriptParagraph]}>
+              {poi.description}
+            </ThemedText>
+            <ThemedText color="textSecondary" style={[theme.typography.body, styles.scriptParagraph]}>
               Welcome to {poi.name}. As you explore this {poi.categories[0]?.toLowerCase() || 'landmark'}, you will discover its unique history and significance to the city. Narration is automatically triggered when you enter the virtual geofence.
             </ThemedText>
           </View>
@@ -140,10 +146,31 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   
-  playButtonImage: {
-    width: 70,  
-    height: 70, 
-    resizeMode: 'contain',
+  playButtonCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25, 
+    backgroundColor: '#879A73', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3, 
+  },
+  playTriangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 10,
+    borderBottomWidth: 10,
+    borderLeftWidth: 16,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#FFFFFF',
+    marginLeft: 4, 
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -161,19 +188,11 @@ const styles = StyleSheet.create({
     paddingRight: 15,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 6,
-    // Đã xóa color
-  },
-  address: {
-    fontSize: 14,
-    // Đã xóa color
   },
   distanceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EAE4D3',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
@@ -181,16 +200,9 @@ const styles = StyleSheet.create({
   locationIcon: {
     width: 14,
     height: 14,
-    tintColor: '#6B8E23',
     marginRight: 4,
   },
-  distanceText: {
-    fontSize: 14,
-    color: '#6B8E23',
-    fontWeight: 'bold',
-  },
   audioPlayerCard: {
-    backgroundColor: '#EAE4D3', 
     borderRadius: 16,
     padding: 16,
     marginBottom: 30,
@@ -206,46 +218,33 @@ const styles = StyleSheet.create({
     paddingRight: 15,
   },
   audioTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
     marginBottom: 4,
-  },
-  audioSubtitle: {
-    fontSize: 13,
   },
   progressContainer: {
     width: '100%',
   },
   progressBarBackground: {
     height: 4,
-    backgroundColor: '#D1CDBF',
     borderRadius: 2,
     marginBottom: 8,
   },
   progressBarFill: {
     width: '30%', 
     height: '100%',
-    backgroundColor: '#6B8E23',
     borderRadius: 2,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  timeText: {
-    fontSize: 12,
-  },
   scriptSection: {
     marginTop: 10,
   },
   scriptTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 15,
+    fontSize: 20, 
   },
   scriptParagraph: {
-    fontSize: 15,
-    lineHeight: 24,
     marginBottom: 15,
   },
 });
