@@ -7,7 +7,16 @@ export function useQrScan() {
   const lastScannedData = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!permission || permission.granted || !permission.canAskAgain || requestedPermission.current) {
+    if (!permission) {
+      return;
+    }
+    if (permission.granted) {
+      return;
+    }
+    if (!permission.canAskAgain) {
+      return;
+    }
+    if (requestedPermission.current) {
       return;
     }
 
@@ -16,14 +25,18 @@ export function useQrScan() {
   }, [permission, requestPermission]);
 
   const handleBarcodeScanned = useCallback((result: ScanningResult) => {
-    if (lastScannedData.current === result.data) return;
+    if (lastScannedData.current === result.data) {
+      return;
+    }
 
     lastScannedData.current = result.data;
     console.log("[QR Scanner] Nhận diện mã:", result.data);
   }, []);
 
+  const hasPermission = Boolean(permission && permission.granted);
+
   return {
-    hasPermission: permission?.granted ?? false,
+    hasPermission,
     requestPermission,
     handleBarcodeScanned,
   };

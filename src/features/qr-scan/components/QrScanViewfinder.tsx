@@ -1,11 +1,11 @@
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { CameraView, type ScanningResult } from "expo-camera";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
+import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { useTheme } from "@/hooks/use-theme";
 import { getStartupImage } from "@/features/startup/services/startup-images";
+import { useTheme } from "@/hooks/use-theme";
 import { useScanAnimation } from "../hooks/useScanAnimation";
 
 type Props = {
@@ -13,6 +13,48 @@ type Props = {
   requestPermission: () => void;
   handleBarcodeScanned: (result: ScanningResult) => void;
 };
+
+function renderScannerContent(
+  hasPermission: boolean,
+  requestPermission: () => void,
+  handleBarcodeScanned: (result: ScanningResult) => void,
+  styles: ReturnType<typeof createStyles>,
+  theme: ReturnType<typeof useTheme>
+) {
+  if (hasPermission) {
+    return (
+      <CameraView
+        style={styles.cameraInsideFrame}
+        facing="back"
+        barcodeScannerSettings={{
+          barcodeTypes: ["qr"],
+        }}
+        onBarcodeScanned={handleBarcodeScanned}
+      />
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      style={styles.permissionTouchArea}
+      onPress={requestPermission}
+      activeOpacity={0.8}
+    >
+      <SymbolView
+        name={{
+          ios: "camera.fill",
+          android: "camera_alt",
+          web: "camera_alt",
+        }}
+        size={28}
+        tintColor={theme.colors.white}
+      />
+      <ThemedText style={styles.permissionPromptText}>
+        Bật Camera
+      </ThemedText>
+    </TouchableOpacity>
+  );
+}
 
 export function QrScanViewfinder({ hasPermission, requestPermission, handleBarcodeScanned }: Props) {
   const theme = useTheme();
@@ -29,35 +71,7 @@ export function QrScanViewfinder({ hasPermission, requestPermission, handleBarco
       />
       <View style={styles.overlayContainer} pointerEvents="box-none">
         <View style={styles.scanFrame}>
-          {hasPermission ? (
-            <CameraView
-              style={styles.cameraInsideFrame}
-              facing="back"
-              barcodeScannerSettings={{
-                barcodeTypes: ["qr"],
-              }}
-              onBarcodeScanned={handleBarcodeScanned}
-            />
-          ) : (
-            <TouchableOpacity
-              style={styles.permissionTouchArea}
-              onPress={requestPermission}
-              activeOpacity={0.8}
-            >
-              <SymbolView
-                name={{
-                  ios: "camera.fill",
-                  android: "camera_alt",
-                  web: "camera_alt",
-                }}
-                size={28}
-                tintColor={theme.colors.white}
-              />
-              <ThemedText style={styles.permissionPromptText}>
-                Bật Camera
-              </ThemedText>
-            </TouchableOpacity>
-          )}
+          {renderScannerContent(hasPermission, requestPermission, handleBarcodeScanned, styles, theme)}
           <Animated.View
             style={[
               styles.laserLine,
@@ -91,7 +105,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    // zIndex: 100,
     elevation: 100,
     justifyContent: "center",
     alignItems: "center",
@@ -143,5 +156,4 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
-
 });
