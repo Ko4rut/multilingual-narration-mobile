@@ -5,11 +5,18 @@ import { useTheme } from "@/hooks/use-theme";
 import { DeviceStorageInfo } from "../types/offline.types";
 
 interface Props {
-  storage: DeviceStorageInfo;
+  storage: DeviceStorageInfo | null;
+  isLoading?: boolean;
 }
 
-export function DeviceStorageCard({ storage }: Props) {
+export function DeviceStorageCard({ storage, isLoading }: Props) {
   const theme = useTheme();
+
+  const displayText = isLoading
+    ? "Checking storage..."
+    : (storage?.displayText ?? "Storage info unavailable");
+
+  const percentage = storage ? Math.min(100, Math.max(0, storage.usedPercentage)) : 0;
 
   return (
     <View
@@ -36,7 +43,7 @@ export function DeviceStorageCard({ storage }: Props) {
           color="textSecondary"
           style={theme.typography.caption}
         >
-          {storage.displayText}
+          {displayText}
         </ThemedText>
       </View>
 
@@ -46,7 +53,7 @@ export function DeviceStorageCard({ storage }: Props) {
             styles.progressBar,
             {
               backgroundColor: theme.colors.primary,
-              width: `${Math.min(100, Math.max(0, storage.usedPercentage))}%`,
+              width: `${percentage}%`,
             },
           ]}
         />

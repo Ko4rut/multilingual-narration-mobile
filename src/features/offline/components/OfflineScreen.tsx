@@ -5,13 +5,15 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 
-import { MOCK_DEVICE_STORAGE, MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
+import { MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
+import { useDeviceStorage } from "../hooks/useDeviceStorage";
 import { DeviceStorageCard } from "./DeviceStorageCard";
 import { RegionPackCard } from "./RegionPackCard";
 
 export default function OfflineScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { storage, isLoading } = useDeviceStorage();
 
   return (
     <ThemedView style={styles.container}>
@@ -48,7 +50,7 @@ export default function OfflineScreen() {
           </ThemedText>
         </View>
 
-        <DeviceStorageCard storage={MOCK_DEVICE_STORAGE} />
+        <DeviceStorageCard storage={storage} isLoading={isLoading} />
 
         <View style={[styles.listSection, { marginTop: theme.spacing.lg + 4 }]}>
           <ThemedText

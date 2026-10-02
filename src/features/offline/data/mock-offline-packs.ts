@@ -1,11 +1,4 @@
-import { DeviceStorageInfo, OfflineRegionPack } from "../types/offline.types";
-
-export const MOCK_DEVICE_STORAGE: DeviceStorageInfo = {
-  usedBytes: 1.2 * 1024 * 1024 * 1024,
-  totalBytes: 64 * 1024 * 1024 * 1024,
-  displayText: "1.2 GB of 64 GB Used",
-  usedPercentage: 12,
-};
+import { OfflineRegionPack } from "../types/offline.types";
 
 export const MOCK_OFFLINE_PACKS: OfflineRegionPack[] = [
   {
