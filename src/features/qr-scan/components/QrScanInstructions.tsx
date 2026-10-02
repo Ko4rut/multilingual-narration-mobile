@@ -1,5 +1,5 @@
-import { StyleSheet, View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";

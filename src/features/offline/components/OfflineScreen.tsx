@@ -1,17 +1,29 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
 
-import { MOCK_DEVICE_STORAGE, MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
+import { MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
+import { useDeviceStorage } from "../hooks/useDeviceStorage";
 import { DeviceStorageCard } from "./DeviceStorageCard";
 import { RegionPackCard } from "./RegionPackCard";
 
 export default function OfflineScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { storage, isLoading } = useDeviceStorage();
+
+  let paddingTop = theme.spacing.lg;
+  if (insets.top > 0) {
+    paddingTop = insets.top + theme.spacing.md;
+  }
+
+  let paddingBottom = theme.spacing.xl;
+  if (insets.bottom > 0) {
+    paddingBottom = insets.bottom + theme.spacing.lg;
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -20,8 +32,8 @@ export default function OfflineScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top > 0 ? insets.top + theme.spacing.md : theme.spacing.lg,
-            paddingBottom: insets.bottom > 0 ? insets.bottom + theme.spacing.lg : theme.spacing.xl,
+            paddingTop,
+            paddingBottom,
             backgroundColor: theme.colors.background,
           },
         ]}
@@ -48,7 +60,7 @@ export default function OfflineScreen() {
           </ThemedText>
         </View>
 
-        <DeviceStorageCard storage={MOCK_DEVICE_STORAGE} />
+        <DeviceStorageCard storage={storage} isLoading={isLoading} />
 
         <View style={[styles.listSection, { marginTop: theme.spacing.lg + 4 }]}>
           <ThemedText
