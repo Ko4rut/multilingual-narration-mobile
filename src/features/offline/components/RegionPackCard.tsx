@@ -1,5 +1,5 @@
-import { StyleSheet, View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
@@ -7,6 +7,106 @@ import { OfflineRegionPack } from "../types/offline.types";
 
 interface Props {
   pack: OfflineRegionPack;
+}
+
+function getDownloadPercentage(progress?: number): number {
+  if (typeof progress !== "number") {
+    return 0;
+  }
+  if (progress < 0) {
+    return 0;
+  }
+  if (progress > 100) {
+    return 100;
+  }
+  return progress;
+}
+
+function renderAction(pack: OfflineRegionPack, theme: ReturnType<typeof useTheme>) {
+  if (pack.status === "saved") {
+    return (
+      <View
+        style={[
+          styles.savedBadge,
+          {
+            backgroundColor: theme.colors.primaryLight,
+            borderRadius: theme.radius.pill,
+            paddingHorizontal: theme.spacing.sm + 2,
+            paddingVertical: theme.spacing.xs - 1,
+          },
+        ]}
+      >
+        <ThemedText
+          style={[
+            theme.typography.caption,
+            styles.savedBadgeText,
+            { color: theme.colors.primaryDark },
+          ]}
+        >
+          Saved
+        </ThemedText>
+      </View>
+    );
+  }
+
+  if (pack.status === "downloading") {
+    const progress = getDownloadPercentage(pack.progress);
+    return (
+      <ThemedText
+        style={[
+          theme.typography.caption,
+          styles.downloadingText,
+          { color: theme.colors.primaryDark },
+        ]}
+      >
+        {progress}%
+      </ThemedText>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.downloadIconCircle,
+        {
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.radius.pill,
+        },
+      ]}
+    >
+      <SymbolView
+        name={{
+          ios: "arrow.down.to.line",
+          android: "arrow_downward",
+          web: "arrow_downward",
+        }}
+        size={16}
+        tintColor={theme.colors.textPrimary}
+      />
+    </View>
+  );
+}
+
+function renderProgressBar(pack: OfflineRegionPack, theme: ReturnType<typeof useTheme>) {
+  if (pack.status !== "downloading") {
+    return null;
+  }
+
+  const progress = getDownloadPercentage(pack.progress);
+
+  return (
+    <View style={[styles.progressTrack, { backgroundColor: theme.colors.cardHover }]}>
+      <View
+        style={[
+          styles.progressBar,
+          {
+            backgroundColor: theme.colors.primary,
+            width: `${progress}%`,
+          },
+        ]}
+      />
+    </View>
+  );
 }
 
 export function RegionPackCard({ pack }: Props) {
@@ -25,7 +125,6 @@ export function RegionPackCard({ pack }: Props) {
     >
       <View style={styles.mainRow}>
         <View style={styles.infoColumn}>
-          {/* Tiêu đề gói: Dùng body (16px) in đậm vừa vặn thay vì heading (22px) */}
           <ThemedText
             style={[
               theme.typography.body,
@@ -48,79 +147,11 @@ export function RegionPackCard({ pack }: Props) {
         </View>
 
         <View style={styles.actionColumn}>
-          {pack.status === "saved" && (
-            <View
-              style={[
-                styles.savedBadge,
-                {
-                  backgroundColor: theme.colors.primaryLight,
-                  borderRadius: theme.radius.pill,
-                  paddingHorizontal: theme.spacing.sm + 2,
-                  paddingVertical: theme.spacing.xs - 1,
-                },
-              ]}
-            >
-              <ThemedText
-                style={[
-                  theme.typography.caption,
-                  styles.savedBadgeText,
-                  { color: theme.colors.primaryDark },
-                ]}
-              >
-                Saved
-              </ThemedText>
-            </View>
-          )}
-
-          {pack.status === "downloading" && (
-            <ThemedText
-              style={[
-                theme.typography.caption,
-                styles.downloadingText,
-                { color: theme.colors.primaryDark },
-              ]}
-            >
-              {pack.progress ?? 0}%
-            </ThemedText>
-          )}
-
-          {pack.status === "idle" && (
-            <View
-              style={[
-                styles.downloadIconCircle,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderRadius: theme.radius.pill,
-                },
-              ]}
-            >
-              <SymbolView
-                name={{
-                  ios: "arrow.down.to.line",
-                  android: "arrow_downward",
-                  web: "arrow_downward",
-                }}
-                size={16}
-                tintColor={theme.colors.textPrimary}
-              />
-            </View>
-          )}
+          {renderAction(pack, theme)}
         </View>
       </View>
 
-      {pack.status === "downloading" && (
-        <View style={[styles.progressTrack, { backgroundColor: theme.colors.cardHover }]}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                backgroundColor: theme.colors.primary,
-                width: `${Math.min(100, Math.max(0, pack.progress ?? 0))}%`,
-              },
-            ]}
-          />
-        </View>
-      )}
+      {renderProgressBar(pack, theme)}
     </View>
   );
 }

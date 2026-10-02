@@ -1,6 +1,22 @@
-import { useEffect, useState } from "react";
 import { getFreeDiskStorageAsync, getTotalDiskCapacityAsync } from "expo-file-system/legacy";
+import { useEffect, useState } from "react";
 import { DeviceStorageInfo } from "../types/offline.types";
+
+const ONE_GB_IN_BYTES = 1024 * 1024 * 1024;
+
+function calculateUsedPercentage(usedBytes: number, totalBytes: number): number {
+  if (totalBytes <= 0) {
+    return 0;
+  }
+  const percentage = Math.round((usedBytes / totalBytes) * 100);
+  if (percentage < 0) {
+    return 0;
+  }
+  if (percentage > 100) {
+    return 100;
+  }
+  return percentage;
+}
 
 export function useDeviceStorage() {
   const [storage, setStorage] = useState<DeviceStorageInfo | null>(null);
@@ -21,13 +37,10 @@ export function useDeviceStorage() {
         if (!isMounted) return;
 
         const usedBytes = Math.max(0, totalBytes - freeBytes);
-        const usedPercentage =
-          totalBytes > 0
-            ? Math.min(100, Math.max(0, Math.round((usedBytes / totalBytes) * 100)))
-            : 0;
+        const usedPercentage = calculateUsedPercentage(usedBytes, totalBytes);
 
-        const usedGB = (usedBytes / 1024 ** 3).toFixed(1);
-        const totalGB = (totalBytes / 1024 ** 3).toFixed(0);
+        const usedGB = (usedBytes / ONE_GB_IN_BYTES).toFixed(1);
+        const totalGB = Math.round(totalBytes / ONE_GB_IN_BYTES);
 
         setStorage({
           usedBytes,
@@ -37,7 +50,6 @@ export function useDeviceStorage() {
         });
       } catch (err) {
         if (!isMounted) return;
-        console.warn("Unable to fetch device storage info:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         if (isMounted) {

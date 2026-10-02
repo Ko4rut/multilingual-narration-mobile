@@ -9,14 +9,33 @@ interface Props {
   isLoading?: boolean;
 }
 
+function getDisplayText(storage: DeviceStorageInfo | null, isLoading?: boolean): string {
+  if (isLoading) {
+    return "Checking storage...";
+  }
+  if (!storage) {
+    return "Storage info unavailable";
+  }
+  return storage.displayText;
+}
+
+function getProgressWidth(storage: DeviceStorageInfo | null): number {
+  if (!storage) {
+    return 0;
+  }
+  if (storage.usedPercentage < 0) {
+    return 0;
+  }
+  if (storage.usedPercentage > 100) {
+    return 100;
+  }
+  return storage.usedPercentage;
+}
+
 export function DeviceStorageCard({ storage, isLoading }: Props) {
   const theme = useTheme();
-
-  const displayText = isLoading
-    ? "Checking storage..."
-    : (storage?.displayText ?? "Storage info unavailable");
-
-  const percentage = storage ? Math.min(100, Math.max(0, storage.usedPercentage)) : 0;
+  const displayText = getDisplayText(storage, isLoading);
+  const progressWidth = getProgressWidth(storage);
 
   return (
     <View
@@ -53,7 +72,7 @@ export function DeviceStorageCard({ storage, isLoading }: Props) {
             styles.progressBar,
             {
               backgroundColor: theme.colors.primary,
-              width: `${percentage}%`,
+              width: `${progressWidth}%`,
             },
           ]}
         />

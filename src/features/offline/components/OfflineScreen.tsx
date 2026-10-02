@@ -1,8 +1,8 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
 
 import { MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
@@ -15,6 +15,16 @@ export default function OfflineScreen() {
   const insets = useSafeAreaInsets();
   const { storage, isLoading } = useDeviceStorage();
 
+  let paddingTop = theme.spacing.lg;
+  if (insets.top > 0) {
+    paddingTop = insets.top + theme.spacing.md;
+  }
+
+  let paddingBottom = theme.spacing.xl;
+  if (insets.bottom > 0) {
+    paddingBottom = insets.bottom + theme.spacing.lg;
+  }
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView
@@ -22,8 +32,8 @@ export default function OfflineScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top > 0 ? insets.top + theme.spacing.md : theme.spacing.lg,
-            paddingBottom: insets.bottom > 0 ? insets.bottom + theme.spacing.lg : theme.spacing.xl,
+            paddingTop,
+            paddingBottom,
             backgroundColor: theme.colors.background,
           },
         ]}
