@@ -1,3 +1,4 @@
+/** Chuyển tọa độ người dùng thành GeoJSON source và circle layer trên MapLibre. */
 import { GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 
 import type { UserLocationMarkerProps } from "../types";

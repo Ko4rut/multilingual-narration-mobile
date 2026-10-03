@@ -1,3 +1,4 @@
+/** Hiển thị dung lượng thiết bị và thanh tỷ lệ bộ nhớ đã sử dụng. */
 import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";

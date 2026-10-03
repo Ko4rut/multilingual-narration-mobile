@@ -1,3 +1,4 @@
+/** Điều phối quyền vị trí, camera, map view và các control phủ trên bản đồ. */
 import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -12,7 +13,8 @@ import { FocusLocationButton } from "./FocusLocationButton";
 
 import { LocationLoading } from "./LocationLoading";
 
-import BottomSheet, { BOTTOM_SHEET_COLLAPSED_HEIGHT } from "./BottomSheet";
+import { BOTTOM_SHEET_COLLAPSED_HEIGHT } from "../constants/bottomSheet";
+import BottomSheet from "./BottomSheet";
 
 export default function MapController() {
   const theme = useTheme();

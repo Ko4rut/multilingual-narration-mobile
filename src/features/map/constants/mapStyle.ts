@@ -1,3 +1,4 @@
+/** MapLibre style tối giản sử dụng raster tiles từ OpenStreetMap. */
 import type { StyleSpecification } from "@maplibre/maplibre-react-native";
 
 export const OPEN_STREET_MAP_STYLE: StyleSpecification = {

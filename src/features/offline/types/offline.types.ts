@@ -1,3 +1,4 @@
+/** Mô hình dữ liệu của gói nội dung offline và dung lượng thiết bị. */
 export type OfflinePackageStatus = "saved" | "downloading" | "idle";
 
 export interface OfflineRegionPack {

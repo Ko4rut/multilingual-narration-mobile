@@ -1,3 +1,4 @@
+/** Fixture POI có tọa độ cho Map; không phải nguồn dữ liệu production. */
 import type { PointOfInterest } from "../types";
 
 export const MOCK_POIS: PointOfInterest[] = [

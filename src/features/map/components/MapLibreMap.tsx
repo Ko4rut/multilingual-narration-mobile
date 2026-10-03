@@ -1,3 +1,4 @@
+/** Adapter UI cho MapLibre, đồng bộ camera sau khi style và GPS sẵn sàng. */
 import { Camera, Map } from "@maplibre/maplibre-react-native";
 
 import { useEffect, useState } from "react";

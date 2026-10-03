@@ -1,3 +1,4 @@
+/** Preload và giữ ImageRef để các màn hình tái sử dụng asset đã giải mã. */
 import { Image, type ImageRef } from "expo-image";
 
 import { startupImages } from "../constants/startup-assets";

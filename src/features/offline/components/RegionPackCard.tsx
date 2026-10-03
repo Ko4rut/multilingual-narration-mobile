@@ -1,3 +1,4 @@
+/** Thẻ gói khu vực với trạng thái tải, đã lưu hoặc sẵn sàng tải. */
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
 

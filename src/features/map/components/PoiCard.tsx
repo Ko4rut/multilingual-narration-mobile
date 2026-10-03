@@ -1,9 +1,8 @@
+/** Biến thể thẻ POI dùng trong bottom sheet của bản đồ. */
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -12,7 +11,9 @@ import {
   type PressableStateCallbackType,
 } from "react-native";
 
+import { useCategoryMarquee } from "@/hooks/use-category-marquee";
 import { useTheme } from "@/hooks/use-theme";
+import { formatDistance } from "@/utils/format-distance";
 
 import type { PointOfInterest } from "../types";
 
@@ -28,19 +29,6 @@ type CategoryMarqueeProps = {
 type CategorySequenceProps = CategoryMarqueeProps & {
   onLayout?(event: LayoutChangeEvent): void;
 };
-
-const MARQUEE_INITIAL_DELAY = 800;
-const MARQUEE_REPEAT_DELAY = 15000;
-const MARQUEE_MINIMUM_DURATION = 4000;
-const MARQUEE_SPEED = 32;
-
-// Dùng mét cho địa điểm gần và kilomet cho địa điểm từ 1 km trở lên.
-function formatDistance(distanceMeters: number) {
-  if (distanceMeters < 1000) {
-    return `${distanceMeters}m`;
-  }
-  return `${(distanceMeters / 1000).toFixed(1)}km`;
-}
 
 // Hiển thị một category dưới dạng badge và giữ nội dung trên một dòng.
 function CategoryBadge({ category }: { category: string }) {
@@ -92,62 +80,13 @@ function CategorySequence({ categories, onLayout }: CategorySequenceProps) {
 // Chỉ chạy marquee khi toàn bộ category dài hơn chiều rộng khả dụng.
 function CategoryMarquee({ categories }: CategoryMarqueeProps) {
   const theme = useTheme();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const [viewportWidth, setViewportWidth] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
   const marqueeGap = theme.spacing.xs;
-  const isOverflowing = contentWidth > viewportWidth && viewportWidth > 0;
-
-  function handleViewportLayout(event: LayoutChangeEvent) {
-    setViewportWidth(Math.ceil(event.nativeEvent.layout.width));
-  }
-
-  function handleContentLayout(event: LayoutChangeEvent) {
-    setContentWidth(Math.ceil(event.nativeEvent.layout.width));
-  }
-
-  useEffect(
-    function startMarquee() {
-      translateX.stopAnimation();
-      translateX.setValue(0);
-
-      if (!isOverflowing) {
-        return undefined;
-      }
-
-      const travelDistance = contentWidth + marqueeGap;
-      const duration = Math.max(
-        MARQUEE_MINIMUM_DURATION,
-        (travelDistance / MARQUEE_SPEED) * 1000,
-      );
-      const marqueeCycle = Animated.sequence([
-        Animated.timing(translateX, {
-          duration,
-          easing: Easing.linear,
-          isInteraction: false,
-          toValue: -travelDistance,
-          useNativeDriver: true,
-        }),
-        // Giữ tại bản sao trong 20 giây trước khi bắt đầu vòng tiếp theo.
-        Animated.delay(MARQUEE_REPEAT_DELAY),
-      ]);
-      const animation = Animated.sequence([
-        Animated.delay(MARQUEE_INITIAL_DELAY),
-        Animated.loop(marqueeCycle),
-      ]);
-
-      animation.start();
-
-      // Dừng animation khi card bị unmount hoặc kích thước category thay đổi.
-      function stopMarquee() {
-        animation.stop();
-        translateX.setValue(0);
-      }
-
-      return stopMarquee;
-    },
-    [contentWidth, isOverflowing, marqueeGap, translateX],
-  );
+  const {
+    handleContentLayout,
+    handleViewportLayout,
+    isOverflowing,
+    translateX,
+  } = useCategoryMarquee(marqueeGap);
 
   return (
     <View onLayout={handleViewportLayout} style={styles.categoriesViewport}>

@@ -1,3 +1,4 @@
+/** Quản lý quyền camera và chống xử lý lặp cùng một nội dung QR liên tiếp. */
 import { useCameraPermissions, type ScanningResult } from "expo-camera";
 import { useCallback, useEffect, useRef } from "react";
 
