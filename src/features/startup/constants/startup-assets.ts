@@ -1,4 +1,4 @@
-// startup/constants/startup-assets.ts
+/** Registry ảnh cần preload trong giai đoạn khởi động ứng dụng. */
 export const startupImages = {
   splashLogo: require(
     "@/assets/images/branding/splash-logo.png"

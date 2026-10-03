@@ -1,3 +1,4 @@
+/** Tạo Animated interpolation cho đường laser chạy trong khung QR. */
 import { useEffect, useRef } from "react";
 import { Animated, Easing } from "react-native";
 

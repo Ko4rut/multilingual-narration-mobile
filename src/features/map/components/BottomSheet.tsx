@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+/** Bottom sheet tìm kiếm và hiển thị các POI gần khu vực bản đồ. */
 import {
   FlatList,
   Pressable,
@@ -12,67 +12,22 @@ import {
 
 import { SymbolView } from "expo-symbols";
 
-import {
-  Gesture,
-  GestureDetector,
-  type GestureStateChangeEvent,
-  type GestureUpdateEvent,
-  type PanGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import { GestureDetector } from "react-native-gesture-handler";
 
-import Animated, {
-  clamp,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/use-theme";
 
 import { MOCK_POIS } from "../data/mock-pois";
+import { useBottomSheet } from "../hooks/useBottomSheet";
+import { usePoiSearch } from "../hooks/usePoiSearch";
 import type { PointOfInterest } from "../types";
 import { PoiCard } from "./PoiCard";
-
-//
-const COLLAPSED_HEIGHT = 28;
-// Sheet chỉ mở đến khoảng giữa màn hình để người dùng vẫn quan sát được bản đồ.
-const EXPANDED_HEIGHT_RATIO = 0.54;
-// Vận tốc tối thiểu để ưu tiên hướng vuốt thay vì vị trí hiện tại của sheet.
-const VELOCITY_THRESHOLD = 500;
-
-const SPRING_CONFIG = {
-  damping: 22,
-  stiffness: 240,
-  mass: 0.85,
-};
 
 type BottomSheetProps = {
   pois?: PointOfInterest[];
   onPoiPress?(poi: PointOfInterest): void;
 };
-
-function calculateSheetHeight(screenHeight: number) {
-  return Math.round(screenHeight * EXPANDED_HEIGHT_RATIO);
-}
-
-function calculateCollapsedOffset(sheetHeight: number) {
-  return Math.max(sheetHeight - COLLAPSED_HEIGHT, 0);
-}
-
-// Tìm kiếm trong tên của mỗi POI.
-function filterPoisByName(pois: PointOfInterest[], searchQuery: string) {
-  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("en");
-
-  if (!normalizedQuery) {
-    return pois;
-  }
-
-  function hasMatchingName(poi: PointOfInterest) {
-    return poi.name.toLocaleLowerCase("en").includes(normalizedQuery);
-  }
-
-  return pois.filter(hasMatchingName);
-}
 
 function PoiSeparator() {
   const theme = useTheme();
@@ -86,97 +41,10 @@ export default function BottomSheet({
 }: BottomSheetProps) {
   const theme = useTheme();
   const { height: screenHeight } = useWindowDimensions();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const sheetHeight = calculateSheetHeight(screenHeight);
-
-  // translateY = 0 là trạng thái mở; collapsedOffset là trạng thái thu gọn.
-  const collapsedOffset = calculateCollapsedOffset(sheetHeight);
-
-  const translateY = useSharedValue(collapsedOffset);
-  const gestureStartY = useSharedValue(collapsedOffset);
-
-  function updateSnapPoints() {
-    // Tính lại snap point khi thiết bị xoay hoặc kích thước cửa sổ thay đổi.
-    translateY.value = collapsedOffset;
-    gestureStartY.value = collapsedOffset;
-  }
-
-  useEffect(updateSnapPoints, [collapsedOffset, gestureStartY, translateY]);
-
-  function getFilteredPois() {
-    return filterPoisByName(pois, searchQuery);
-  }
-
-  const filteredPois = useMemo(getFilteredPois, [pois, searchQuery]);
-
-  function snapTo(position: number) {
-    "worklet";
-
-    // Spring tạo cảm giác sheet dừng tự nhiên tại một trong hai snap point.
-    translateY.value = withSpring(position, SPRING_CONFIG);
-  }
-
-  function handleGestureBegin() {
-    "worklet";
-
-    gestureStartY.value = translateY.value;
-  }
-
-  function handleGestureUpdate(
-    event: GestureUpdateEvent<PanGestureHandlerEventPayload>,
-  ) {
-    "worklet";
-
-    translateY.value = clamp(
-      gestureStartY.value + event.translationY,
-      0,
-      collapsedOffset,
-    );
-  }
-
-  function handleGestureEnd(
-    event: GestureStateChangeEvent<PanGestureHandlerEventPayload>,
-  ) {
-    "worklet";
-
-    // Vuốt nhanh lên luôn mở sheet.
-    if (event.velocityY < -VELOCITY_THRESHOLD) {
-      snapTo(0);
-      return;
-    }
-    // Vuốt nhanh xuống luôn thu gọn sheet.
-    if (event.velocityY > VELOCITY_THRESHOLD) {
-      snapTo(collapsedOffset);
-      return;
-    }
-    // Khi vuốt chậm, sheet dừng tại snap point gần nhất.
-    snapTo(translateY.value < collapsedOffset / 2 ? 0 : collapsedOffset);
-  }
-
-  // Chỉ gắn gesture vào thanh kéo để không tranh chấp thao tác cuộn FlatList.
-  const panGesture = Gesture.Pan()
-    .onBegin(handleGestureBegin)
-    .onUpdate(handleGestureUpdate)
-    .onEnd(handleGestureEnd);
-
-  function getAnimatedSheetStyle() {
-    "worklet";
-
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  }
-
-  const animatedSheetStyle = useAnimatedStyle(getAnimatedSheetStyle);
-
-  function toggleSheet() {
-    snapTo(translateY.value < collapsedOffset / 2 ? collapsedOffset : 0);
-  }
-
-  function clearSearch() {
-    setSearchQuery("");
-  }
+  const { animatedSheetStyle, panGesture, sheetHeight, toggleSheet } =
+    useBottomSheet(screenHeight);
+  const { clearSearch, filteredPois, searchQuery, setSearchQuery } =
+    usePoiSearch(pois);
 
   function getPoiKey(poi: PointOfInterest) {
     return poi.id;
@@ -332,8 +200,6 @@ export default function BottomSheet({
     </Animated.View>
   );
 }
-
-export { COLLAPSED_HEIGHT as BOTTOM_SHEET_COLLAPSED_HEIGHT };
 
 const styles = StyleSheet.create({
   sheet: {

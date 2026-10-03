@@ -1,3 +1,4 @@
+/** Nút điều khiển yêu cầu camera bản đồ quay về vị trí người dùng. */
 import { Image, Pressable, StyleSheet } from "react-native";
 
 import { IMAGES } from "../constants/images";

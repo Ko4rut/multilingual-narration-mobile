@@ -1,16 +1,8 @@
-export type LanguageOption = {
-  id: string;
-  code: string;
-  label: string;
-  nativeLabel: string;
-};
-
-export type AudioQualityOption = {
-  id: string;
-  label: string;
-  bitrateKbps: number;
-  description: string;
-};
+/** Fixture ngôn ngữ và chất lượng audio cho Settings picker. */
+import type {
+  AudioQualityOption,
+  LanguageOption,
+} from "../types/settings.types";
 
 // Danh sách ngôn ngữ giả lập để thay thế bằng dữ liệu API sau này.
 export const MOCK_LANGUAGE_OPTIONS: LanguageOption[] = [
@@ -51,6 +43,3 @@ export const MOCK_AUDIO_QUALITY_OPTIONS: AudioQualityOption[] = [
     description: "Best available narration quality.",
   },
 ];
-
-export const DEFAULT_LANGUAGE = MOCK_LANGUAGE_OPTIONS[0];
-export const DEFAULT_AUDIO_QUALITY = MOCK_AUDIO_QUALITY_OPTIONS[2];

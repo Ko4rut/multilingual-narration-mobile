@@ -1,4 +1,5 @@
-﻿import { loadTabIcons } from "@/constants/tab-icons";
+/** Preload font và ảnh bắt buộc trước khi ứng dụng chuyển khỏi startup. */
+import { loadTabIcons } from "@/constants/tab-icons";
 import { FontFamily } from "@/constants/theme";
 import { loadAsync as loadFontsAsync } from "expo-font";
 import { useCallback, useEffect, useState } from "react";

@@ -1,3 +1,4 @@
+/** Xin quyền foreground, lấy vị trí đầu tiên và theo dõi cập nhật GPS. */
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 
