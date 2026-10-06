@@ -1,3 +1,4 @@
+/** Nhóm các SettingsRow dưới tiêu đề và khoảng cách thống nhất. */
 import type { PropsWithChildren } from "react";
 import { Text, View } from "react-native";
 

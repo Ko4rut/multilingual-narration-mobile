@@ -1,3 +1,4 @@
+/** Ghép trạng thái quét QR với viewfinder và phần hướng dẫn. */
 import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";

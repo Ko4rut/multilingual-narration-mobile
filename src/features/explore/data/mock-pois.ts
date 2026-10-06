@@ -1,4 +1,7 @@
-export const MOCK_POIS = [
+/** Fixture POI cho Explore; sẽ được thay bằng nguồn dữ liệu thật ở service. */
+import type { ExplorePointOfInterest } from "../types/explore.types";
+
+export const MOCK_POIS: ExplorePointOfInterest[] = [
   {
     id: "dragon-bridge",
     name: "Dragon Bridge",

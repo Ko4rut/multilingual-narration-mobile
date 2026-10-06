@@ -1,3 +1,4 @@
+/** Modal picker generic dùng chung cho các lựa chọn một giá trị trong Settings. */
 import { SymbolView } from "expo-symbols";
 import {
   FlatList,
@@ -13,10 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/hooks/use-theme";
 
-export type SettingsPickerOption = {
-  id: string;
-  label: string;
-};
+import type { SettingsPickerOption } from "../types/settings.types";
 
 type SettingsOptionPickerModalProps<Option extends SettingsPickerOption> = {
   accessibilityLabel: string;

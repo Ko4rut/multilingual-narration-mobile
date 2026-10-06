@@ -1,8 +1,7 @@
+/** Thẻ POI của Explore, gồm ảnh, category chạy ngang và khoảng cách. */
 import { Image } from "expo-image";
-import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -11,30 +10,17 @@ import {
   type PressableStateCallbackType,
 } from "react-native";
 
+import { useCategoryMarquee } from "@/hooks/use-category-marquee";
 import { useTheme } from "@/hooks/use-theme";
+import { formatDistance } from "@/utils/format-distance";
+
+import { EXPLORE_IMAGES } from "../constants/explore-assets";
+import type { ExplorePointOfInterest } from "../types/explore.types";
 
 type PoiCardProps = {
-  poi: {
-    id: string;
-    name: string;
-    description: string;
-    imageUrl: string;
-    distanceMeters: number;
-    categories: string[];
-  };
-  onPress?(poi: PoiCardProps["poi"]): void;
+  poi: ExplorePointOfInterest;
+  onPress?(poi: ExplorePointOfInterest): void;
 };
-
-const MARQUEE_INITIAL_DELAY = 800;
-const MARQUEE_REPEAT_DELAY = 15000;
-const MARQUEE_MINIMUM_DURATION = 4000;
-const MARQUEE_SPEED = 32;
-
-// Dùng mét cho địa điểm gần và kilomet cho địa điểm từ 1 km trở lên.
-function formatDistance(distanceMeters: number) {
-  if (distanceMeters < 1000) return `${distanceMeters}m`;
-  return `${(distanceMeters / 1000).toFixed(1)}km`;
-}
 
 // COMPONENT TẠO THẺ DANH MỤC CÓ NỀN TRẮNG
 function CategoryBadge({ category }: { category: string }) {
@@ -44,7 +30,7 @@ function CategoryBadge({ category }: { category: string }) {
       style={[
         styles.categoryBadge,
         {
-          backgroundColor: theme.colors.background, 
+          backgroundColor: theme.colors.background,
           borderRadius: theme.radius.sm,
           paddingHorizontal: theme.spacing.sm,
           paddingVertical: 4,
@@ -55,7 +41,7 @@ function CategoryBadge({ category }: { category: string }) {
         numberOfLines={1}
         style={[
           theme.typography.caption,
-          { color: theme.colors.textSecondary, fontWeight: '600' },
+          { color: theme.colors.textSecondary, fontWeight: "600" },
         ]}
       >
         {category}
@@ -65,7 +51,13 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 // COMPONENT ĐO CHIỀU RỘNG DÃY DANH MỤC
-function CategorySequence({ categories, onLayout }: { categories: string[]; onLayout?: (event: LayoutChangeEvent) => void }) {
+function CategorySequence({
+  categories,
+  onLayout,
+}: {
+  categories: string[];
+  onLayout?: (event: LayoutChangeEvent) => void;
+}) {
   const theme = useTheme();
   return (
     <View
@@ -81,53 +73,13 @@ function CategorySequence({ categories, onLayout }: { categories: string[]; onLa
 
 function CategoryMarquee({ categories }: { categories: string[] }) {
   const theme = useTheme();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const [viewportWidth, setViewportWidth] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
   const marqueeGap = theme.spacing.xs;
-  const isOverflowing = contentWidth > viewportWidth && viewportWidth > 0;
-
-  function handleViewportLayout(event: LayoutChangeEvent) {
-    setViewportWidth(Math.ceil(event.nativeEvent.layout.width));
-  }
-
-  function handleContentLayout(event: LayoutChangeEvent) {
-    setContentWidth(Math.ceil(event.nativeEvent.layout.width));
-  }
-
-  useEffect(() => {
-    translateX.stopAnimation();
-    translateX.setValue(0);
-
-    if (!isOverflowing) return undefined;
-
-    const travelDistance = contentWidth + marqueeGap;
-    const duration = Math.max(
-      MARQUEE_MINIMUM_DURATION,
-      (travelDistance / MARQUEE_SPEED) * 1000
-    );
-    const marqueeCycle = Animated.sequence([
-      Animated.timing(translateX, {
-        duration,
-        easing: Easing.linear,
-        isInteraction: false,
-        toValue: -travelDistance,
-        useNativeDriver: true,
-      }),
-      Animated.delay(MARQUEE_REPEAT_DELAY),
-    ]);
-    const animation = Animated.sequence([
-      Animated.delay(MARQUEE_INITIAL_DELAY),
-      Animated.loop(marqueeCycle),
-    ]);
-
-    animation.start();
-
-    return () => {
-      animation.stop();
-      translateX.setValue(0);
-    };
-  }, [contentWidth, isOverflowing, marqueeGap, translateX]);
+  const {
+    handleContentLayout,
+    handleViewportLayout,
+    isOverflowing,
+    translateX,
+  } = useCategoryMarquee(marqueeGap);
 
   return (
     <View onLayout={handleViewportLayout} style={styles.categoriesViewport}>
@@ -140,9 +92,15 @@ function CategoryMarquee({ categories }: { categories: string[] }) {
           },
         ]}
       >
-        <CategorySequence categories={categories} onLayout={handleContentLayout} />
+        <CategorySequence
+          categories={categories}
+          onLayout={handleContentLayout}
+        />
         {isOverflowing ? (
-          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
             <CategorySequence categories={categories} />
           </View>
         ) : null}
@@ -199,12 +157,11 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
         ]}
       >
         <View style={[styles.metaRow, { gap: theme.spacing.sm }]}>
-          
           <CategoryMarquee categories={poi.categories} />
 
           <View style={styles.distance}>
             <Image
-              source={require("@/assets/images/tabIcons/map-pin.png")}
+              source={EXPLORE_IMAGES.mapPin}
               style={{
                 width: 14,
                 height: 14,
@@ -266,7 +223,7 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: "row",
-    alignItems: "center", 
+    alignItems: "center",
   },
   categoriesViewport: {
     flex: 1,

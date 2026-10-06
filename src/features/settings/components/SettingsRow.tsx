@@ -1,3 +1,4 @@
+/** Row cài đặt hỗ trợ value, control tùy chỉnh và điều hướng. */
 import { SymbolView } from "expo-symbols";
 import type { ComponentProps, ReactNode } from "react";
 import {

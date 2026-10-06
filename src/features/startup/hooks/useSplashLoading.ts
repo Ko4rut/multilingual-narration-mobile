@@ -1,3 +1,4 @@
+/** Điều khiển thông báo loading và nhịp pulse của các chấm trên splash. */
 import { useEffect, useRef, useState } from "react";
 import { Animated } from "react-native";
 

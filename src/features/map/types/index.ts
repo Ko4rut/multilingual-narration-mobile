@@ -1,3 +1,4 @@
+/** Các kiểu tọa độ, map props và POI được chia sẻ trong feature Map. */
 import type { CameraRef } from "@maplibre/maplibre-react-native";
 
 export type MapCoordinate = {

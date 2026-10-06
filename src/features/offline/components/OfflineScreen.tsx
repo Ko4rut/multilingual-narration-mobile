@@ -1,3 +1,4 @@
+/** Màn hình tổng hợp dung lượng thiết bị và các gói nội dung offline. */
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

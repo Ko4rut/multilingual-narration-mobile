@@ -1,3 +1,4 @@
+/** React splash hiển thị tiến trình preload và fallback khi ảnh lỗi. */
 import {
   Animated,
   Button,

@@ -1,3 +1,4 @@
+/** Trạng thái chờ trong khi quyền và tọa độ GPS đang được xác định. */
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export function LocationLoading() {

@@ -1,3 +1,4 @@
+/** Nội dung hướng dẫn và lưu ý hiển thị dưới camera quét QR. */
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
 

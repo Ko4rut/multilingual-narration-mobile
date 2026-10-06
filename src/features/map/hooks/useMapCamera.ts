@@ -1,3 +1,4 @@
+/** Sở hữu MapLibre camera ref và thao tác focus camera theo tọa độ. */
 import { useRef } from "react";
 
 import type { CameraRef } from "@maplibre/maplibre-react-native";

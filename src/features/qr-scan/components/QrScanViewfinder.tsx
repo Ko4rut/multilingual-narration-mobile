@@ -1,3 +1,4 @@
+/** Hiển thị CameraView, trạng thái quyền camera và đường quét động. */
 import { CameraView, type ScanningResult } from "expo-camera";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";

@@ -1,3 +1,4 @@
+/** Đọc dung lượng đĩa qua Expo FileSystem và chuẩn hóa dữ liệu cho UI. */
 import { getFreeDiskStorageAsync, getTotalDiskCapacityAsync } from "expo-file-system/legacy";
 import { useEffect, useState } from "react";
 import { DeviceStorageInfo } from "../types/offline.types";

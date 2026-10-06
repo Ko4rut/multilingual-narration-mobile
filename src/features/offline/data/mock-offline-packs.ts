@@ -1,3 +1,4 @@
+/** Fixture các gói offline dùng để dựng UI trước khi nối backend. */
 import { OfflineRegionPack } from "../types/offline.types";
 
 export const MOCK_OFFLINE_PACKS: OfflineRegionPack[] = [
