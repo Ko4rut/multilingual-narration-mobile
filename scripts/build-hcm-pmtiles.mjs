@@ -12,7 +12,15 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = join(repositoryRoot, "assets", "maps");
 const filePath = join(outputDirectory, "hcm-metropolitan.pmtiles");
 const manifestPath = join(outputDirectory, "hcm-metropolitan.manifest.json");
-const source = process.env.PROTOMAPS_BUILD_URL || "https://build.protomaps.com/20261012.pmtiles";
+const sources = process.env.PROTOMAPS_BUILD_URL
+  ? [process.env.PROTOMAPS_BUILD_URL]
+  : [
+      "https://build.protomaps.com/20261011.pmtiles",
+      "https://build.protomaps.com/20260811.pmtiles",
+      "https://build.protomaps.com/20260527.pmtiles",
+      "https://build.protomaps.com/20251027.pmtiles",
+    ];
+let source = "";
 
 // Approximate bounding box, not an official set of administrative boundaries.
 // Includes former Districts 5, 8, 10 and nearby central districts.
@@ -22,6 +30,14 @@ const maxBytes = 95 * 1024 * 1024; // Keep under GitHub's 100 MiB per-blob limit
 
 mkdirSync(outputDirectory, { recursive: true });
 if (!existsSync(filePath) || process.env.FORCE_MAP_REBUILD === "1") {
+  for (const candidate of sources) {
+  // A HEAD request prevents reading the full planet during source probing.
+  const availability = spawnSync("curl", ["-fLsSI", "--max-time", "18", candidate], { stdio: "ignore" });
+  if (availability.status !== 0) {
+    console.warn("Unavailable Protomaps build:", candidate);
+    continue;
+  }
+  source = candidate;
   const args = [
     "run", "--rm",
     "--mount", "type=bind,source=" + outputDirectory + ",target=/data",
@@ -34,7 +50,13 @@ if (!existsSync(filePath) || process.env.FORCE_MAP_REBUILD === "1") {
   console.log("Extracting HCMC PMTiles from:", source);
   const result = spawnSync("docker", args, { stdio: "inherit", shell: false });
   if (result.error) throw result.error;
-  if (result.status !== 0) throw new Error("PMTiles extraction failed: " + result.status);
+  if (result.status === 0) break;
+  console.warn("PMTiles extraction failed for:", candidate, result.status);
+  const { rmSync } = await import("node:fs");
+  rmSync(filePath, { force: true });
+  source = "";
+  }
+  if (!source) throw new Error("No accessible Protomaps build found. Set PROTOMAPS_BUILD_URL to a verified PMTiles v4 archive.");
 }
 
 if (!existsSync(filePath)) throw new Error("Map archive was not created: " + filePath);
