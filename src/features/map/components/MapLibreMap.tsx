@@ -1,65 +1,50 @@
-/** Adapter UI cho MapLibre, đồng bộ camera sau khi style và GPS sẵn sàng. */
+/** MapLibre view backed by the exact same style that was saved for offline use. */
 import { Camera, Map } from "@maplibre/maplibre-react-native";
-
 import { useEffect, useState } from "react";
-
 import { StyleSheet } from "react-native";
 
-import { OPEN_STREET_MAP_STYLE } from "../constants/mapStyle";
-
+import {
+  REQUIRED_OFFLINE_MAP,
+  isWithinRequiredMap,
+} from "@/features/offline/constants/requiredMap";
+import { HCM_MAP_STYLE } from "../constants/mapStyle";
 import type { MapProps } from "../types";
-
 import { UserLocationMarker } from "./UserLocationMarker";
 
 export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const hasLocation = latitude !== undefined && longitude !== undefined;
 
-  const hasValidLocation = latitude !== undefined && longitude !== undefined;
-
-  // Khi GPS thay đổi
-  // camera di chuyển theo user
-
+  // Do not pan outside the downloaded footprint when GPS is in another city.
   useEffect(() => {
-    if (isMapLoaded && hasValidLocation) {
-      cameraRef.current?.easeTo({
-        center: [longitude, latitude],
-
-        duration: 500,
-      });
+    if (
+      isMapLoaded &&
+      latitude !== undefined &&
+      longitude !== undefined &&
+      isWithinRequiredMap(latitude, longitude)
+    ) {
+      cameraRef.current?.easeTo({ center: [longitude, latitude], duration: 500 });
     }
-  }, [isMapLoaded, latitude, longitude]);
+  }, [isMapLoaded, latitude, longitude, cameraRef]);
 
   return (
     <Map
       style={styles.map}
-      mapStyle={OPEN_STREET_MAP_STYLE}
-      attribution={false}
+      mapStyle={HCM_MAP_STYLE}
+      attribution
       compass={false}
       logo={false}
-      onDidFinishLoadingStyle={() => {
-        console.log("Map style loaded");
-
-        setIsMapLoaded(true);
-      }}
+      onDidFinishLoadingStyle={() => setIsMapLoaded(true)}
     >
       <Camera
         ref={cameraRef}
-        initialViewState={{
-          center: [108.2068, 16.0471],
-
-          zoom: 13,
-        }}
+        initialViewState={{ center: REQUIRED_OFFLINE_MAP.center, zoom: 13 }}
       />
-
-      {hasValidLocation && (
+      {hasLocation && (
         <UserLocationMarker latitude={latitude} longitude={longitude} />
       )}
     </Map>
   );
 }
 
-const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-  },
-});
+const styles = StyleSheet.create({ map: { flex: 1 } });

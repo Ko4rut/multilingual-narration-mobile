@@ -1,23 +1,4 @@
-/** MapLibre style tối giản sử dụng raster tiles từ OpenStreetMap. */
-import type { StyleSpecification } from "@maplibre/maplibre-react-native";
+/** Map view uses the same style as the required offline pack. */
+import { OFFLINE_MAP_STYLE_URL } from "@/features/offline/constants/requiredMap";
 
-export const OPEN_STREET_MAP_STYLE: StyleSpecification = {
-  version: 8,
-
-  sources: {
-    openstreetmap: {
-      type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      maxzoom: 19,
-    },
-  },
-
-  layers: [
-    {
-      id: "openstreetmap-layer",
-      type: "raster",
-      source: "openstreetmap",
-    },
-  ],
-};
+export const HCM_MAP_STYLE = OFFLINE_MAP_STYLE_URL;

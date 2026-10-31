@@ -1,104 +1,86 @@
-/** Màn hình tổng hợp dung lượng thiết bị và các gói nội dung offline. */
+/** Offline tab reports the actual native map pack instead of fixture packages. */
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
-
-import { MOCK_OFFLINE_PACKS } from "../data/mock-offline-packs";
+import { REQUIRED_OFFLINE_MAP } from "../constants/requiredMap";
+import { getRequiredOfflinePack, isPackComplete } from "../services/requiredOfflineMap";
 import { useDeviceStorage } from "../hooks/useDeviceStorage";
 import { DeviceStorageCard } from "./DeviceStorageCard";
-import { RegionPackCard } from "./RegionPackCard";
+
+type InstalledMap = { available: boolean; bytes: number; error: string | null };
+
+function formatSize(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function OfflineScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { storage, isLoading } = useDeviceStorage();
+  const [installed, setInstalled] = useState<InstalledMap | null>(null);
 
-  let paddingTop = theme.spacing.lg;
-  if (insets.top > 0) {
-    paddingTop = insets.top + theme.spacing.md;
-  }
-
-  let paddingBottom = theme.spacing.xl;
-  if (insets.bottom > 0) {
-    paddingBottom = insets.bottom + theme.spacing.lg;
-  }
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      try {
+        const pack = await getRequiredOfflinePack();
+        const status = pack ? await pack.status() : null;
+        if (mounted) {
+          setInstalled({
+            available: status ? isPackComplete(status) : false,
+            bytes: status?.completedResourceSize ?? 0,
+            error: null,
+          });
+        }
+      } catch (error) {
+        if (mounted) {
+          setInstalled({ available: false, bytes: 0, error: String(error) });
+        }
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop,
-            paddingBottom,
-            backgroundColor: theme.colors.background,
-          },
-        ]}
+        contentContainerStyle={{
+          paddingTop: insets.top + theme.spacing.lg,
+          paddingBottom: insets.bottom + theme.spacing.xl,
+          paddingHorizontal: theme.spacing.lg,
+        }}
       >
-        <View style={[styles.header, { marginTop: theme.spacing.sm }]}>
-          <ThemedText
-            style={[
-              theme.typography.title,
-              styles.screenTitle,
-              { color: theme.colors.textPrimary },
-            ]}
-          >
-            Offline Content Guides
-          </ThemedText>
-
-          <ThemedText
-            color="textSecondary"
-            style={[
-              theme.typography.subtitle,
-              { marginTop: theme.spacing.xs + 2 },
-            ]}
-          >
-            Download whole regions over Wi-Fi to use without cellular data
-          </ThemedText>
-        </View>
-
+        <ThemedText style={[theme.typography.title, styles.heading]}>Bản đồ ngoại tuyến</ThemedText>
+        <ThemedText color="textSecondary" style={{ marginBottom: theme.spacing.lg }}>
+          Bản đồ đã tải được lưu trên thiết bị và có thể sử dụng khi không có Internet.
+        </ThemedText>
         <DeviceStorageCard storage={storage} isLoading={isLoading} />
-
-        <View style={[styles.listSection, { marginTop: theme.spacing.lg + 4 }]}>
-          <ThemedText
-            style={[
-              theme.typography.heading,
-              styles.sectionTitle,
-              {
-                color: theme.colors.textPrimary,
-                marginBottom: theme.spacing.md - 2,
-              },
-            ]}
-          >
-            Available Region Packs
+        <View style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.lg, padding: theme.spacing.lg, marginTop: theme.spacing.lg }}>
+          <ThemedText style={theme.typography.heading}>{REQUIRED_OFFLINE_MAP.name}</ThemedText>
+          <ThemedText color="textSecondary" style={{ marginTop: theme.spacing.sm }}>
+            Zoom {REQUIRED_OFFLINE_MAP.minZoom}–{REQUIRED_OFFLINE_MAP.maxZoom} · {installed === null ? "Đang kiểm tra..." : installed.available ? "Đã tải về" : "Chưa hoàn tất"}
           </ThemedText>
-
-          {MOCK_OFFLINE_PACKS.map((pack) => (
-            <RegionPackCard key={pack.id} pack={pack} />
-          ))}
+          {installed?.available && (
+            <ThemedText color="textSecondary" style={{ marginTop: theme.spacing.xs }}>
+              Dữ liệu tài nguyên đã lưu: {formatSize(installed.bytes)}
+            </ThemedText>
+          )}
+          {installed?.error && <ThemedText color="textSecondary">{installed.error}</ThemedText>}
         </View>
+        <ThemedText color="textSecondary" style={{ marginTop: theme.spacing.lg }}>
+          Nội dung POI và audio ngoại tuyến sẽ được bổ sung ở giai đoạn tiếp theo.
+        </ThemedText>
       </ScrollView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-  },
-  header: {},
-  screenTitle: {
-    letterSpacing: -0.4,
-  },
-  listSection: {},
-  sectionTitle: {
-    letterSpacing: -0.3,
-  },
+  container: { flex: 1 },
+  heading: { marginBottom: 10 },
 });
