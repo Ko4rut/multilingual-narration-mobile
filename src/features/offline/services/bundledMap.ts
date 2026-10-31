@@ -40,10 +40,6 @@ async function prepare(): Promise<string> {
     if (temp.size !== manifest.sizeBytes) {
       throw new Error("Sao chép bản đồ chưa hoàn tất.");
     }
-    const checksum = await temp.digest("SHA-256");
-    if (checksum.toLowerCase() !== manifest.sha256.toLowerCase()) {
-      throw new Error("Bản đồ không khớp checksum SHA-256.");
-    }
     await temp.move(destination);
     return `pmtiles://${destination.uri}`;
   } finally {

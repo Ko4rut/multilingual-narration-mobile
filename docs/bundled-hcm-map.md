@@ -15,7 +15,7 @@ The native MapLibre Android v13.6.1 asset file source cannot reliably read PMTil
 - `assets/maps/hcm-metropolitan.pmtiles` (~12.55 MiB) is a verified Protomaps extract.
 - `assets/maps/hcm-metropolitan.manifest.json` contains expected bytes and SHA-256.
 - `metro.config.js` registers `.pmtiles` as a binary asset extension.
-- `expo-asset` resolves a bundled asset. `src/features/offline/services/bundledMap.ts` copies it to `Paths.document/offline-maps/`, validates SHA-256, and returns a `pmtiles://file://...` URL. A completed local copy is reused on subsequent starts.
+- `expo-asset` resolves a bundled asset. `src/features/offline/services/bundledMap.ts` copies it to `Paths.document/offline-maps/`, checks the copied file size, and returns a `pmtiles://file://...` URL. A completed local copy is reused on subsequent starts.
 - No first-run network map download, no native OfflineManager pack, no custom SQLite or Expo native copying plugin.
 - Android debug builds serve asset requests via Metro; a truly offline **fresh installation** must be tested using a release APK/AAB with JS assets bundled into the binary.
 
@@ -31,6 +31,6 @@ For a cold start completely offline, create a release app build, install it, the
 
 ## Map data regeneration
 
-`node scripts/build-hcm-pmtiles.mjs` extracts from an available Protomaps planet build; the generated archive and manifest must be committed together. The Android release app must include exactly those bytes.
+`node scripts/build-hcm-pmtiles.mjs` extracts from an available Protomaps planet build; the generated archive and manifest must be committed together. The Android release app must include exactly those bytes. Manifest SHA-256 is checked at archive generation, not on the Android device (Expo FileSystem SDK 57 does not expose File.digest).
 
 © OpenStreetMap contributors · Protomaps. Review applicable map-data attribution and license before release.
