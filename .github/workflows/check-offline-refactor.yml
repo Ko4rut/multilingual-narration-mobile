@@ -12,6 +12,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/check-offline-refactor.yml"
+      - "scripts/check-offline-code-style.mjs"
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,8 @@ jobs:
         run: npm ci
       - name: Check TypeScript
         run: npx tsc --noEmit
+      - name: Enforce explicit offline code style
+        run: node scripts/check-offline-code-style.mjs
       - name: Confirm bundled offline assets
         run: |
           test "$(find 'assets/glyphs/Noto Sans Regular' -maxdepth 1 -name '*.pbf' | wc -l)" -eq 9
