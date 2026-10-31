@@ -1,57 +1,71 @@
-/** Adapter UI cho MapLibre, đồng bộ camera sau khi style và GPS sẵn sàng. */
+/**
+ * Hiển thị MapLibre chỉ với nguồn PMTiles và glyphs cục bộ.
+ * Chặn tâm camera vượt khỏi khu vực đã đóng gói để tránh bản đồ trống.
+ */
 import { Camera, Map } from "@maplibre/maplibre-react-native";
-
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
 
-import { OPEN_STREET_MAP_STYLE } from "../constants/mapStyle";
-
+import { REQUIRED_OFFLINE_MAP, isWithinRequiredMap } from "@/features/offline/constants/requiredMap";
+import { useBundledMapResources } from "@/features/offline/context/BundledMapContext";
+import { createHcmMapStyle } from "../constants/mapStyle";
 import type { MapProps } from "../types";
-
 import { UserLocationMarker } from "./UserLocationMarker";
 
 export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const { pmtilesUri, glyphsUrl } = useBundledMapResources();
+  const [mapReady, setMapReady] = useState(false);
 
-  const hasValidLocation = latitude !== undefined && longitude !== undefined;
+  const mapStyle = useMemo(
+    function buildLocalMapStyle() {
+      return createHcmMapStyle(pmtilesUri, glyphsUrl);
+    },
+    [pmtilesUri, glyphsUrl],
+  );
 
-  // Khi GPS thay đổi
-  // camera di chuyển theo user
+  const hasLocation = latitude !== undefined && longitude !== undefined;
+  let locationInsideMap = false;
 
-  useEffect(() => {
-    if (isMapLoaded && hasValidLocation) {
-      cameraRef.current?.easeTo({
-        center: [longitude, latitude],
+  if (hasLocation) {
+    locationInsideMap = isWithinRequiredMap(latitude, longitude);
+  }
 
-        duration: 500,
-      });
+  useEffect(function synchronizeGpsCamera() {
+    if (!mapReady || !hasLocation || !locationInsideMap) {
+      return;
     }
-  }, [isMapLoaded, latitude, longitude]);
+
+    if (latitude === undefined || longitude === undefined) {
+      return;
+    }
+
+    cameraRef.current?.easeTo({
+      center: [longitude, latitude],
+      duration: 500,
+    });
+  }, [mapReady, hasLocation, locationInsideMap, latitude, longitude, cameraRef]);
+
+  function handleMapStyleLoaded(): void {
+    setMapReady(true);
+  }
 
   return (
     <Map
       style={styles.map}
-      mapStyle={OPEN_STREET_MAP_STYLE}
-      attribution={false}
+      mapStyle={mapStyle}
+      attribution
       compass={false}
       logo={false}
-      onDidFinishLoadingStyle={() => {
-        console.log("Map style loaded");
-
-        setIsMapLoaded(true);
-      }}
+      onDidFinishLoadingStyle={handleMapStyleLoaded}
     >
       <Camera
         ref={cameraRef}
-        initialViewState={{
-          center: [108.2068, 16.0471],
-
-          zoom: 13,
-        }}
+        initialViewState={{ center: REQUIRED_OFFLINE_MAP.center, zoom: 13 }}
+        minZoom={REQUIRED_OFFLINE_MAP.minZoom}
+        maxZoom={REQUIRED_OFFLINE_MAP.maxZoom}
+        maxBounds={REQUIRED_OFFLINE_MAP.bounds}
       />
-
-      {hasValidLocation && (
+      {hasLocation && (
         <UserLocationMarker latitude={latitude} longitude={longitude} />
       )}
     </Map>
@@ -59,7 +73,5 @@ export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
 }
 
 const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-  },
+  map: { flex: 1 },
 });

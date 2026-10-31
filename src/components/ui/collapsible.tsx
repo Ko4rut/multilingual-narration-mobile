@@ -1,37 +1,90 @@
-import { SymbolView } from 'expo-symbols';
-import { PropsWithChildren, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+/**
+ * Khối nội dung có thể mở rộng.
+ *
+ * Đồng bộ với API theme hiện tại: ThemedView không có prop "type",
+ * ThemedText dùng style và useTheme trả về nhóm colors/spacing.
+ */
+import { SymbolView } from "expo-symbols";
+import { type PropsWithChildren, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  type PressableStateCallbackType,
+} from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/hooks/use-theme";
 
-export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
+type CollapsibleProps = PropsWithChildren<{ title: string }>;
+
+function getHeadingStyle(state: PressableStateCallbackType) {
+  if (state.pressed) {
+    return [styles.heading, styles.pressedHeading];
+  }
+
+  return [styles.heading];
+}
+
+export function Collapsible({ children, title }: CollapsibleProps) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
+
+  let iconRotation: "90deg" | "-90deg" = "90deg";
+  if (isOpen) {
+    iconRotation = "-90deg";
+  }
+
+  function toggleOpen(): void {
+    setIsOpen(function invert(previousOpen) {
+      return !previousOpen;
+    });
+  }
 
   return (
     <ThemedView>
       <Pressable
-        style={({ pressed }) => [styles.heading, pressed && styles.pressedHeading]}
-        onPress={() => setIsOpen((value) => !value)}>
-        <ThemedView type="backgroundElement" style={styles.button}>
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isOpen }}
+        style={getHeadingStyle}
+        onPress={toggleOpen}
+      >
+        <ThemedView
+          style={[
+            styles.button,
+            {
+              width: theme.spacing.lg,
+              height: theme.spacing.lg,
+              backgroundColor: theme.colors.card,
+            },
+          ]}
+        >
           <SymbolView
-            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
             size={14}
             weight="bold"
-            tintColor={theme.text}
-            style={{ transform: [{ rotate: isOpen ? '-90deg' : '90deg' }] }}
+            tintColor={theme.colors.textPrimary}
+            style={{ transform: [{ rotate: iconRotation }] }}
           />
         </ThemedView>
-
-        <ThemedText type="small">{title}</ThemedText>
+        <ThemedText style={theme.typography.caption}>{title}</ThemedText>
       </Pressable>
+
       {isOpen && (
         <Animated.View entering={FadeIn.duration(200)}>
-          <ThemedView type="backgroundElement" style={styles.content}>
+          <ThemedView
+            style={[
+              styles.content,
+              {
+                marginTop: theme.spacing.sm,
+                marginLeft: theme.spacing.lg,
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                backgroundColor: theme.colors.card,
+              },
+            ]}
+          >
             {children}
           </ThemedView>
         </Animated.View>
@@ -42,24 +95,15 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
 
 const styles = StyleSheet.create({
   heading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  pressedHeading: {
-    opacity: 0.7,
-  },
+  pressedHeading: { opacity: 0.7 },
   button: {
-    width: Spacing.four,
-    height: Spacing.four,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  content: {
-    marginTop: Spacing.three,
-    borderRadius: Spacing.three,
-    marginLeft: Spacing.four,
-    padding: Spacing.four,
-  },
+  content: {},
 });

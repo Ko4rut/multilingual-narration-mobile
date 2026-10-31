@@ -1,0 +1,20 @@
+{
+  "name": "TP.HCM — Quận 5, 8, 10 và các quận trung tâm lân cận",
+  "bounds": [
+    106.55,
+    10.66,
+    106.83,
+    10.88
+  ],
+  "center": [
+    106.69,
+    10.77
+  ],
+  "minZoom": 0,
+  "maxZoom": 15,
+  "displayMaxZoom": 16,
+  "sizeBytes": 13161681,
+  "sha256": "288040b21f34a9470b325f03a68ee298895f332708cb301d1be75a8849082820",
+  "source": "https://build.protomaps.com/20260811.pmtiles",
+  "dataAttribution": "© OpenStreetMap contributors; Protomaps basemap"
+}
