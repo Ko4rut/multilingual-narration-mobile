@@ -24,6 +24,16 @@
       "sha256": "537ccbee79180f4f8b3f6d2bdd27df979260ce1a0358c40d7aa7db505d9b03aa"
     },
     {
+      "name": "1024-1279.pbf",
+      "sizeBytes": 125320,
+      "sha256": "302231023f7048d9694a7b3f3b737c8bc378f5af0175aed5bb4f2f3b6188919a"
+    },
+    {
+      "name": "1280-1535.pbf",
+      "sizeBytes": 84434,
+      "sha256": "34345ffc1a3c6748147e079a7971a4ef10561f721fdf76a4a91491280ab8bccb"
+    },
+    {
       "name": "7680-7935.pbf",
       "sizeBytes": 135449,
       "sha256": "b9100ec886dff647198802c41d1ca6df9e6f82325179d8d71e3d377b5fe8682e"
