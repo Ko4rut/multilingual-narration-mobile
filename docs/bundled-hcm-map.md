@@ -16,6 +16,8 @@ The native MapLibre Android v13.6.1 asset file source cannot reliably read PMTil
 - `assets/maps/hcm-metropolitan.manifest.json` contains expected bytes and SHA-256.
 - `metro.config.js` registers `.pmtiles` as a binary asset extension.
 - `expo-asset` resolves a bundled asset. `src/features/offline/services/bundledMap.ts` copies it to `Paths.document/offline-maps/`, checks the copied file size, and returns a `pmtiles://file://...` URL. A completed local copy is reused on subsequent starts.
+- The copy uses a temporary file. Do **not** delete the mutated source `File` object after `File.move()`: Expo updates its URI to the destination, so deleting it would remove the map and cause MapLibre's `Error fetching PMTiles header: path not found`. Cleanup must reference the original temporary URI only.
+- The service verifies the final destination file exists and matches the manifest's size before passing its URL to MapLibre.
 - No first-run network map download, no native OfflineManager pack, no custom SQLite or Expo native copying plugin.
 - Android debug builds serve asset requests via Metro; a truly offline **fresh installation** must be tested using a release APK/AAB with JS assets bundled into the binary.
 

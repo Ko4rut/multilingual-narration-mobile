@@ -31,19 +31,31 @@ async function prepare(): Promise<string> {
     throw new Error("File PMTiles nhúng thiếu hoặc sai kích thước.");
   }
 
-  // The temporary file is never exposed to MapLibre, even after an interrupted copy.
+  // Copy to a staging filename before publishing the archive.
   const temp = new File(directory, archiveName + ".partial");
+  // File.move() MUTATES the File object's uri to the destination path.
+  // Retain the *original* temporary URI so cleanup can never delete the moved archive.
+  const temporaryUri = temp.uri;
   if (temp.exists) temp.delete();
 
   try {
     await source.copy(temp);
-    if (temp.size !== manifest.sizeBytes) {
+    if (!temp.exists || temp.size !== manifest.sizeBytes) {
       throw new Error("Sao chép bản đồ chưa hoàn tất.");
     }
+
     await temp.move(destination);
+    // Verify the final path before allowing MapLibre to load the source.
+    if (!destination.exists || destination.size !== manifest.sizeBytes) {
+      throw new Error("Không tìm thấy PMTiles ở đường dẫn lưu trữ cuối cùng.");
+    }
+
     return `pmtiles://${destination.uri}`;
   } finally {
-    if (temp.exists) temp.delete();
+    // IMPORTANT: do not check temp.exists here: after move() it points at
+    // destination.uri and deleting it would erase the ready-to-use map.
+    const leftover = new File(temporaryUri);
+    if (leftover.exists) leftover.delete();
   }
 }
 
