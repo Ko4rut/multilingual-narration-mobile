@@ -31,7 +31,7 @@ export function Collapsible({ children, title }: CollapsibleProps) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useTheme();
 
-  let iconRotation = "90deg";
+  let iconRotation: "90deg" | "-90deg" = "90deg";
   if (isOpen) {
     iconRotation = "-90deg";
   }
