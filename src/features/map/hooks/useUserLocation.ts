@@ -1,96 +1,97 @@
-/** Xin quyền foreground, lấy vị trí đầu tiên và theo dõi cập nhật GPS. */
+/**
+ * Xin quyền vị trí và theo dõi GPS.
+ *
+ * Bản đồ nền độc lập với GPS: từ chối quyền hoặc tắt dịch vụ vị trí
+ * không ngăn người dùng xem PMTiles offline.
+ */
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 
 export function useUserLocation() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
-  );
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [permission, setPermission] = useState<Location.PermissionStatus | null>(null);
 
-  const [permission, setPermission] =
-    useState<Location.PermissionStatus | null>(null);
-
-  useEffect(() => {
+  useEffect(function setupLocationTracking() {
+    let active = true;
     let subscription: Location.LocationSubscription | null = null;
 
-    async function startTracking() {
-      console.log("========== GPS START ==========");
-
-      // 1. Request permission
-      const permissionResult =
-        await Location.requestForegroundPermissionsAsync();
-
-      console.log("Permission status:", permissionResult.status);
-
-      setPermission(permissionResult.status);
-
-      if (permissionResult.status !== Location.PermissionStatus.GRANTED) {
-        console.log("GPS permission denied");
+    function handlePositionUpdate(newLocation: Location.LocationObject): void {
+      if (!active) {
         return;
       }
 
-      console.log("Permission granted");
-
-      // 2. Check location service
-      const serviceEnabled = await Location.hasServicesEnabledAsync();
-
-      console.log("Location service enabled:", serviceEnabled);
-
-      if (!serviceEnabled) {
-        console.log("Android Location Service OFF");
-        return;
-      }
-
-      // 3. Get current location
-      try {
-        console.log("Getting current position...");
-
-        const current = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-
-        console.log("CURRENT LOCATION:", {
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-          accuracy: current.coords.accuracy,
-        });
-
-        setLocation(current);
-      } catch (error) {
-        console.log("GET CURRENT LOCATION ERROR:", error);
-      }
-
-      // 4. Watch location continuously
-      subscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 10,
-        },
-
-        (newLocation) => {
-          console.log("LOCATION UPDATE:", {
-            latitude: newLocation.coords.latitude,
-            longitude: newLocation.coords.longitude,
-            accuracy: newLocation.coords.accuracy,
-          });
-
-          setLocation(newLocation);
-        },
-      );
-
-      console.log("GPS tracking started");
+      setLocation(newLocation);
     }
 
-    startTracking();
+    async function startTracking(): Promise<void> {
+      try {
+        const permissionResult = await Location.requestForegroundPermissionsAsync();
 
-    return () => {
-      console.log("GPS subscription removed");
-      subscription?.remove();
+        if (!active) {
+          return;
+        }
+
+        setPermission(permissionResult.status);
+
+        if (permissionResult.status !== Location.PermissionStatus.GRANTED) {
+          return;
+        }
+
+        const enabled = await Location.hasServicesEnabledAsync();
+
+        if (!active || !enabled) {
+          return;
+        }
+
+        // Không bắt buộc có vị trí đầu tiên để vẽ bản đồ.
+        try {
+          const initialPosition = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+
+          handlePositionUpdate(initialPosition);
+        } catch (cause) {
+          console.warn("Chưa lấy được vị trí GPS đầu tiên.", cause);
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const watcher = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10,
+          },
+          handlePositionUpdate,
+        );
+
+        // Permission hoặc component có thể thay đổi khi await đang chạy.
+        // Khi đó phải hủy watcher vừa tạo ngay để không rò rỉ subscription.
+        if (!active) {
+          watcher.remove();
+          return;
+        }
+
+        subscription = watcher;
+      } catch (cause) {
+        if (active) {
+          console.warn("Không thể khởi động theo dõi vị trí GPS.", cause);
+        }
+      }
+    }
+
+    void startTracking();
+
+    return function stopLocationTracking() {
+      active = false;
+
+      if (subscription !== null) {
+        subscription.remove();
+        subscription = null;
+      }
     };
   }, []);
 
-  return {
-    location,
-    permission,
-  };
+  return { location, permission };
 }
