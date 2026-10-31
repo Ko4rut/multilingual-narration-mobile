@@ -1,0 +1,37 @@
+name: Bundle offline HCMC map labels
+on:
+  push:
+    branches: [feat/hcm-required-offline-map]
+    paths:
+      - "scripts/fetch-hcm-glyphs.mjs"
+      - ".github/workflows/build-hcm-glyphs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-glyphs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download and verify pinned glyph PBF assets
+        run: node scripts/fetch-hcm-glyphs.mjs
+      - name: Verify generated files and license
+        run: |
+          test "$(find 'assets/glyphs/Noto Sans Regular' -maxdepth 1 -name '*.pbf' | wc -l)" -eq 7
+          test -s assets/glyphs/OFL.txt
+          test -s assets/glyphs/manifest.json
+      - name: Commit offline glyph assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/glyphs
+          if ! git diff --cached --quiet; then
+            git commit -m "build(map): bundle Noto Sans Vietnamese glyph ranges"
+            git pull --rebase origin feat/hcm-required-offline-map
+            git push
+          fi
