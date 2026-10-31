@@ -22,7 +22,7 @@ jobs:
         run: node scripts/fetch-hcm-glyphs.mjs
       - name: Verify generated files and license
         run: |
-          test "$(find 'assets/glyphs/Noto Sans Regular' -maxdepth 1 -name '*.pbf' | wc -l)" -eq 7
+          test "$(find 'assets/glyphs/Noto Sans Regular' -maxdepth 1 -name '*.pbf' | wc -l)" -eq 9
           test -s assets/glyphs/OFL.txt
           test -s assets/glyphs/manifest.json
       - name: Commit offline glyph assets

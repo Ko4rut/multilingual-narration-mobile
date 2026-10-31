@@ -6,6 +6,8 @@ const glyphs = [
   { name: "256-511.pbf", bytes: 127726, module: require("../../../../assets/glyphs/Noto Sans Regular/256-511.pbf") },
   { name: "512-767.pbf", bytes: 94728, module: require("../../../../assets/glyphs/Noto Sans Regular/512-767.pbf") },
   { name: "768-1023.pbf", bytes: 77034, module: require("../../../../assets/glyphs/Noto Sans Regular/768-1023.pbf") },
+  { name: "1024-1279.pbf", bytes: 125320, module: require("../../../../assets/glyphs/Noto Sans Regular/1024-1279.pbf") },
+  { name: "1280-1535.pbf", bytes: 84434, module: require("../../../../assets/glyphs/Noto Sans Regular/1280-1535.pbf") },
   { name: "7680-7935.pbf", bytes: 135449, module: require("../../../../assets/glyphs/Noto Sans Regular/7680-7935.pbf") },
   { name: "7936-8191.pbf", bytes: 128630, module: require("../../../../assets/glyphs/Noto Sans Regular/7936-8191.pbf") },
   { name: "8192-8447.pbf", bytes: 64220, module: require("../../../../assets/glyphs/Noto Sans Regular/8192-8447.pbf") },
