@@ -1,71 +1,99 @@
-/** Extract the bundled PMTiles asset to a readable local file for native byte-range access. */
-import { Asset } from "expo-asset";
-import { Directory, File, Paths } from "expo-file-system";
-import manifest from "../../../../assets/maps/hcm-metropolitan.manifest.json";
+/**
+ * Chuẩn bị bản đồ TP.HCM được đóng gói trong APK.
+ *
+ * PMTiles được sao chép một lần vào document directory. Những lần mở app sau,
+ * file hợp lệ được tái sử dụng; không cần mạng và không dùng OfflineManager.
+ */
+import { File, FileMode } from "expo-file-system";
 
-// Metro treats this binary as an asset. In a release APK it is bundled locally.
-const bundledArchive = require("../../../../assets/maps/hcm-metropolitan.pmtiles");
-const archiveName = `hcm-metropolitan-${manifest.sha256.slice(0, 16)}.pmtiles`;
+import mapManifest from "../../../../assets/maps/hcm-metropolitan.manifest.json";
+import {
+  getInstalledAsset,
+  isBundledAssetValid,
+  prepareBundledAsset,
+  type BundledAssetDefinition,
+} from "./bundledAsset";
 
-let pending: Promise<string> | null = null;
+const mapAssetModule = require("../../../../assets/maps/hcm-metropolitan.pmtiles");
+const mapArchiveName =
+  "hcm-metropolitan-" + mapManifest.sha256.substring(0, 16) + ".pmtiles";
 
-async function prepare(): Promise<string> {
-  const directory = new Directory(Paths.document, "offline-maps");
-  directory.create({ idempotent: true, intermediates: true });
+const PMTILES_MAGIC = [80, 77, 84, 105, 108, 101, 115];
 
-  const destination = new File(directory, archiveName);
-  if (destination.exists && destination.size === manifest.sizeBytes) {
-    return `pmtiles://${destination.uri}`;
-  }
-
-  if (destination.exists) destination.delete();
-
-  const asset = Asset.fromModule(bundledArchive);
-  await asset.downloadAsync();
-  if (!asset.localUri?.startsWith("file://")) {
-    throw new Error("Bản đồ nhúng chưa có đường dẫn file cục bộ. Vui lòng build lại ứng dụng.");
-  }
-
-  const source = new File(asset.localUri);
-  if (!source.exists || source.size !== manifest.sizeBytes) {
-    throw new Error("File PMTiles nhúng thiếu hoặc sai kích thước.");
-  }
-
-  // Copy to a staging filename before publishing the archive.
-  const temp = new File(directory, archiveName + ".partial");
-  // File.move() MUTATES the File object's uri to the destination path.
-  // Retain the *original* temporary URI so cleanup can never delete the moved archive.
-  const temporaryUri = temp.uri;
-  if (temp.exists) temp.delete();
+/** Đọc đúng 7 byte header, không nạp toàn bộ PMTiles vào RAM. */
+function hasPmtilesHeader(file: File): boolean {
+  const handle = file.open(FileMode.ReadOnly);
 
   try {
-    await source.copy(temp);
-    if (!temp.exists || temp.size !== manifest.sizeBytes) {
-      throw new Error("Sao chép bản đồ chưa hoàn tất.");
+    const header = handle.readBytesSync(PMTILES_MAGIC.length);
+    if (header.length !== PMTILES_MAGIC.length) {
+      return false;
     }
 
-    await temp.move(destination);
-    // Verify the final path before allowing MapLibre to load the source.
-    if (!destination.exists || destination.size !== manifest.sizeBytes) {
-      throw new Error("Không tìm thấy PMTiles ở đường dẫn lưu trữ cuối cùng.");
+    for (let index = 0; index < PMTILES_MAGIC.length; index += 1) {
+      if (header[index] !== PMTILES_MAGIC[index]) {
+        return false;
+      }
     }
 
-    return `pmtiles://${destination.uri}`;
+    return true;
   } finally {
-    // IMPORTANT: do not check temp.exists here: after move() it points at
-    // destination.uri and deleting it would erase the ready-to-use map.
-    const leftover = new File(temporaryUri);
-    if (leftover.exists) leftover.delete();
+    handle.close();
   }
 }
 
-/** A failed attempt can be retried; concurrent mounts share one preparation. */
-export function prepareBundledMap(): Promise<string> {
-  if (!pending) {
-    pending = prepare().catch((error: unknown) => {
-      pending = null;
-      throw error;
-    });
+const mapDefinition: BundledAssetDefinition = {
+  assetModule: mapAssetModule,
+  directoryNames: ["offline-maps"],
+  fileName: mapArchiveName,
+  expectedBytes: mapManifest.sizeBytes,
+  validateContent: hasPmtilesHeader,
+};
+
+export interface BundledMapStatus {
+  available: boolean;
+  installedBytes: number;
+  expectedBytes: number;
+  version: string;
+}
+
+/** Trạng thái thực của file hiện có, không chỉ là thông báo tĩnh trên UI. */
+export function getBundledMapStatus(): BundledMapStatus {
+  const file = getInstalledAsset(mapDefinition);
+  const available = isBundledAssetValid(file, mapDefinition);
+  let installedBytes = 0;
+
+  if (available) {
+    installedBytes = file.size;
   }
-  return pending;
+
+  return {
+    available,
+    installedBytes,
+    expectedBytes: mapDefinition.expectedBytes,
+    version: mapManifest.sha256.substring(0, 12),
+  };
+}
+
+let preparationPromise: Promise<string> | null = null;
+
+async function installBundledMap(): Promise<string> {
+  const file = await prepareBundledAsset(mapDefinition);
+
+  // MapLibre Native cần URL pmtiles://file://..., không dùng pmtiles://asset://.
+  return "pmtiles://" + file.uri;
+}
+
+/** Các lời gọi đồng thời chia sẻ cùng một tác vụ, lỗi có thể thử lại. */
+export function prepareBundledMap(): Promise<string> {
+  if (preparationPromise !== null) {
+    return preparationPromise;
+  }
+
+  preparationPromise = installBundledMap().catch(function handleInstallationFailure(error: unknown) {
+    preparationPromise = null;
+    throw error;
+  });
+
+  return preparationPromise;
 }
