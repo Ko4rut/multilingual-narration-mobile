@@ -25,7 +25,7 @@ function hasPmtilesHeader(file: File): boolean {
   const handle = file.open(FileMode.ReadOnly);
 
   try {
-    const header = handle.readBytesSync(PMTILES_MAGIC.length);
+    const header = handle.readBytes(PMTILES_MAGIC.length);
     if (header.length !== PMTILES_MAGIC.length) {
       return false;
     }
