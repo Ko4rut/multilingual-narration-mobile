@@ -1,28 +1,22 @@
-/** MapLibre view backed by the exact same style that was saved for offline use. */
+/** Adapter for offline MapLibre rendering with a fully-local PMTiles source. */
 import { Camera, Map } from "@maplibre/maplibre-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
-
-import {
-  REQUIRED_OFFLINE_MAP,
-  isWithinRequiredMap,
-} from "@/features/offline/constants/requiredMap";
-import { HCM_MAP_STYLE } from "../constants/mapStyle";
+import { useBundledMapUri } from "@/features/offline/context/BundledMapContext";
+import { REQUIRED_OFFLINE_MAP, isWithinRequiredMap } from "@/features/offline/constants/requiredMap";
+import { createHcmMapStyle } from "../constants/mapStyle";
 import type { MapProps } from "../types";
 import { UserLocationMarker } from "./UserLocationMarker";
 
 export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const pmtilesUri = useBundledMapUri();
+  const mapStyle = useMemo(() => createHcmMapStyle(pmtilesUri), [pmtilesUri]);
   const hasLocation = latitude !== undefined && longitude !== undefined;
 
-  // Do not pan outside the downloaded footprint when GPS is in another city.
   useEffect(() => {
-    if (
-      isMapLoaded &&
-      latitude !== undefined &&
-      longitude !== undefined &&
-      isWithinRequiredMap(latitude, longitude)
-    ) {
+    if (isMapLoaded && latitude !== undefined && longitude !== undefined
+      && isWithinRequiredMap(latitude, longitude)) {
       cameraRef.current?.easeTo({ center: [longitude, latitude], duration: 500 });
     }
   }, [isMapLoaded, latitude, longitude, cameraRef]);
@@ -30,7 +24,7 @@ export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
   return (
     <Map
       style={styles.map}
-      mapStyle={HCM_MAP_STYLE}
+      mapStyle={mapStyle}
       attribution
       compass={false}
       logo={false}
@@ -40,11 +34,8 @@ export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
         ref={cameraRef}
         initialViewState={{ center: REQUIRED_OFFLINE_MAP.center, zoom: 13 }}
       />
-      {hasLocation && (
-        <UserLocationMarker latitude={latitude} longitude={longitude} />
-      )}
+      {hasLocation && <UserLocationMarker latitude={latitude} longitude={longitude} />}
     </Map>
   );
 }
-
 const styles = StyleSheet.create({ map: { flex: 1 } });

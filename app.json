@@ -46,8 +46,7 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
-      ],
-      "./plugins/withBundledHcmMap"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

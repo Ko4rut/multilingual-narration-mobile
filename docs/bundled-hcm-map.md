@@ -1,26 +1,36 @@
-# Bundled HCMC offline basemap — Android MVP
+# Bundled HCMC offline basemap — Android
 
-This supersedes the first-launch network download in PR #11. The Android app uses a native PMTiles asset, not OfflineManager or a SQLite tile store.
+This map is included in the release APK/AAB, not downloaded when the app is first installed.
+The native MapLibre Android v13.6.1 asset file source cannot reliably read PMTiles byte ranges directly from APK assets, so **do not use** `pmtiles://asset://`.
 
-Coverage rectangle (W,S,E,N): [106.55, 10.66, 106.83, 10.88]. Center: [106.69, 10.77].
-This approximates a larger HCMC central area, including former Districts 5, 8, 10 and neighbors. It is not an administrative polygon.
+## Coverage
 
-## Generate and build
+- Rectangle [west, south, east, north]: [106.55, 10.66, 106.83, 10.88]
+- Covers former Districts 5, 8 and 10 and neighboring central areas. This is not an administrative polygon.
+- Vector data zoom 0–15, style overzooms at display zoom 16.
+- Minimal offline style: roads, water, parks and buildings; no local street-name glyphs or sprites yet.
 
-Requires Docker, Node 22 and an Internet connection during development/build.
+## Build
 
-1. Execute: node scripts/build-hcm-pmtiles.mjs
-2. Verify that assets/maps/hcm-metropolitan.pmtiles and assets/maps/hcm-metropolitan.manifest.json exist.
-3. Execute: npx expo run:android
-4. The Expo config plugin verifies the archive hash and installs it under android/app/src/main/assets.
-5. MapLibre Native reads pmtiles://asset://hcm-metropolitan.pmtiles, directly from the installed app.
+- `assets/maps/hcm-metropolitan.pmtiles` (~12.55 MiB) is a verified Protomaps extract.
+- `assets/maps/hcm-metropolitan.manifest.json` contains expected bytes and SHA-256.
+- `metro.config.js` registers `.pmtiles` as a binary asset extension.
+- `expo-asset` resolves a bundled asset. `src/features/offline/services/bundledMap.ts` copies it to `Paths.document/offline-maps/`, validates SHA-256, and returns a `pmtiles://file://...` URL. A completed local copy is reused on subsequent starts.
+- No first-run network map download, no native OfflineManager pack, no custom SQLite or Expo native copying plugin.
+- Android debug builds serve asset requests via Metro; a truly offline **fresh installation** must be tested using a release APK/AAB with JS assets bundled into the binary.
 
-Generator source is a pinned Protomaps planet build, using zooms 0-15; z16 is overzoomed. Override with PROTOMAPS_BUILD_URL if needed. Generated archive above 95 MiB is rejected, to avoid GitHub blob size limit. GitHub Actions workflow may generate and commit the archive if repository permissions allow it; never merge a PR without both real files. The pipeline downloads from Protomaps, NOT from tile.openstreetmap.org.
+## Testing
 
-## Offline limitations and testing
+```sh
+npm ci
+npx expo start --clear
+npx expo run:android
+```
 
-Basic local vector style renders water, parkland, roads and buildings only: no glyphs, street-name labels, sprites, routing, POI content or audio yet. It has no external URL dependencies.
+For a cold start completely offline, create a release app build, install it, then disable Wi-Fi/mobile data **before the first launch**. Inspect map tile rendering in former Districts 5, 8 and 10, GPS-denied behavior, file size, labels and attribution. Keep the PR in draft until the actual Android offline test passes.
 
-Test in Android development build: first install, force stop, enable airplane mode, relaunch, pan and zoom around former Districts 5/8/10, deny GPS and verify display, check app size and map attribution. This feature requires an Android MapLibre Native version supporting pmtiles://asset:// sources.
+## Map data regeneration
 
-Basemap derived from OpenStreetMap/Natural Earth by Protomaps. Attribute © OpenStreetMap contributors and Protomaps. Review ODbL Produced Work terms before distribution.
+`node scripts/build-hcm-pmtiles.mjs` extracts from an available Protomaps planet build; the generated archive and manifest must be committed together. The Android release app must include exactly those bytes.
+
+© OpenStreetMap contributors · Protomaps. Review applicable map-data attribution and license before release.
