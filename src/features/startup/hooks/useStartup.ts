@@ -1,8 +1,14 @@
-/** Preload font và ảnh bắt buộc trước khi ứng dụng chuyển khỏi startup. */
+/**
+ * Chuẩn bị các tài nguyên giao diện trước khi hiển thị màn hình chính.
+ *
+ * Dữ liệu bản đồ PMTiles và glyphs có vòng đời riêng, được chuẩn bị bởi
+ * useOfflineResources; hook này chỉ xử lý font và hình ảnh của UI.
+ */
 import { loadTabIcons } from "@/constants/tab-icons";
 import { FontFamily } from "@/constants/theme";
 import { loadAsync as loadFontsAsync } from "expo-font";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
 import { loadStartupImages } from "../services/startup-images";
 
 export function useStartup() {
@@ -10,15 +16,12 @@ export function useStartup() {
   const [error, setError] = useState<Error | null>(null);
   const [attempt, setAttempt] = useState(0);
 
-  const retry = useCallback(() => {
-    setError(null);
-    setAttempt((value) => value + 1);
-  }, []);
+  useEffect(function prepareStartupResourcesEffect() {
+    let active = true;
 
-  useEffect(() => {
-    let cancelled = false;
+    async function prepareStartupResources(): Promise<void> {
+      setError(null);
 
-    async function prepare() {
       try {
         await Promise.all([
           loadFontsAsync({
@@ -28,19 +31,38 @@ export function useStartup() {
           loadStartupImages(),
           loadTabIcons(),
         ]);
-        if (!cancelled) setReady(true);
-      } catch (cause) {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause : new Error(String(cause)));
+
+        if (active) {
+          setReady(true);
         }
+      } catch (cause) {
+        if (!active) {
+          return;
+        }
+
+        if (cause instanceof Error) {
+          setError(cause);
+          return;
+        }
+
+        setError(new Error(String(cause)));
       }
     }
 
-    void prepare();
-    return () => {
-      cancelled = true;
+    void prepareStartupResources();
+
+    return function cleanupStartupResourcesEffect() {
+      active = false;
     };
   }, [attempt]);
+
+  function retry(): void {
+    setReady(false);
+    setError(null);
+    setAttempt(function increaseAttempt(previousAttempt) {
+      return previousAttempt + 1;
+    });
+  }
 
   return { ready, error, retry };
 }
