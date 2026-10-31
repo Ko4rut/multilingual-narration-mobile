@@ -2,7 +2,7 @@
 import { Camera, Map } from "@maplibre/maplibre-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
-import { useBundledMapUri } from "@/features/offline/context/BundledMapContext";
+import { useBundledMapResources } from "@/features/offline/context/BundledMapContext";
 import { REQUIRED_OFFLINE_MAP, isWithinRequiredMap } from "@/features/offline/constants/requiredMap";
 import { createHcmMapStyle } from "../constants/mapStyle";
 import type { MapProps } from "../types";
@@ -10,8 +10,8 @@ import { UserLocationMarker } from "./UserLocationMarker";
 
 export function MapLibreMap({ latitude, longitude, cameraRef }: MapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const pmtilesUri = useBundledMapUri();
-  const mapStyle = useMemo(() => createHcmMapStyle(pmtilesUri), [pmtilesUri]);
+  const { pmtilesUri, glyphsUrl } = useBundledMapResources();
+  const mapStyle = useMemo(() => createHcmMapStyle(pmtilesUri, glyphsUrl), [pmtilesUri, glyphsUrl]);
   const hasLocation = latitude !== undefined && longitude !== undefined;
 
   useEffect(() => {

@@ -9,14 +9,15 @@ import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 import { useStartup } from "@/features/startup/hooks/useStartup";
 import { prepareBundledMap } from "@/features/offline/services/bundledMap";
-import { BundledMapUriContext } from "@/features/offline/context/BundledMapContext";
+import { prepareBundledGlyphs } from "@/features/offline/services/bundledGlyphs";
+import { BundledMapUriContext, type BundledMapResources } from "@/features/offline/context/BundledMapContext";
 import AppSplash from "@/features/startup/components/AppSplash";
 
 void SplashScreen.preventAutoHideAsync().catch(console.warn);
 
 export default function RootLayout() {
   const { ready, error, retry } = useStartup();
-  const [mapUri, setMapUri] = useState<string | null>(null);
+  const [mapResources, setMapResources] = useState<BundledMapResources | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapAttempt, setMapAttempt] = useState(0);
   const theme = useTheme();
@@ -34,15 +35,15 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
     setMapError(null);
-    void prepareBundledMap()
-      .then((uri) => { if (mounted) setMapUri(uri); })
+    void Promise.all([prepareBundledMap(), prepareBundledGlyphs()])
+      .then(([pmtilesUri, glyphsUrl]) => { if (mounted) setMapResources({ pmtilesUri, glyphsUrl }); })
       .catch((cause) => {
         if (mounted) setMapError(cause instanceof Error ? cause.message : String(cause));
       });
     return () => { mounted = false; };
   }, [mapAttempt]);
 
-  if (!ready || !mapUri) {
+  if (!ready || !mapResources) {
     const reason = error?.message ?? mapError;
     if (reason) {
       return (
@@ -61,7 +62,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <BundledMapUriContext.Provider value={mapUri}>
+      <BundledMapUriContext.Provider value={mapResources}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
       </BundledMapUriContext.Provider>
     </GestureHandlerRootView>

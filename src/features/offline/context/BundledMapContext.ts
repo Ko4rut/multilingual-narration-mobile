@@ -1,12 +1,8 @@
-/** The map source URI is available only after the bundled archive is ready. */
 import { createContext, useContext } from "react";
-
-export const BundledMapUriContext = createContext<string | null>(null);
-
-export function useBundledMapUri(): string {
-  const uri = useContext(BundledMapUriContext);
-  if (!uri) {
-    throw new Error("Bundled HCMC map is not initialized.");
-  }
-  return uri;
+export type BundledMapResources = { pmtilesUri: string; glyphsUrl: string };
+export const BundledMapUriContext = createContext<BundledMapResources | null>(null);
+export function useBundledMapResources(): BundledMapResources {
+  const resources = useContext(BundledMapUriContext);
+  if (!resources) throw new Error("Offline HCMC map resources are not initialized.");
+  return resources;
 }
