@@ -1,109 +1,51 @@
-/** Trình phát narration dạng tĩnh của màn hình chi tiết POI. */
+/** Trạng thái audio narration; chưa phát audio để không giả lập playback. */
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 
-type PoiNarrationPlayerProps = {
-  poiName: string;
-};
+import type { PoiNarrationPlayerProps } from "../types/explore.types";
 
-export function PoiNarrationPlayer({ poiName }: PoiNarrationPlayerProps) {
+export function PoiNarrationPlayer({ poiName, narration }: PoiNarrationPlayerProps) {
   const theme = useTheme();
-
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
       <View style={styles.header}>
         <View style={styles.info}>
-          <ThemedText
-            color="textPrimary"
-            style={[theme.typography.sectionTitle, styles.title]}
-          >
-            {poiName} - Narration - EN
+          <ThemedText color="textPrimary" style={theme.typography.sectionTitle}>
+            {poiName} — {narration ? narration.language_code.toUpperCase() : "Narration"}
           </ThemedText>
           <ThemedText color="textMuted" style={theme.typography.caption}>
-            Narrated by System
+            {narration
+              ? "Nội dung đã tải. Tính năng phát audio sẽ được tích hợp sau."
+              : "Chưa có audio khả dụng."}
           </ThemedText>
         </View>
-
         <Pressable
-          accessibilityLabel={`Play narration for ${poiName}`}
+          accessibilityLabel="Audio playback is not yet available"
           accessibilityRole="button"
           accessibilityState={{ disabled: true }}
           disabled
-          style={[
-            styles.playButton,
-            {
-              backgroundColor: theme.colors.primary,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
+          style={[styles.playButton, { backgroundColor: theme.colors.primary }]}
         >
-          <View
-            style={[
-              styles.playIcon,
-              { borderLeftColor: theme.colors.white },
-            ]}
-          />
+          <View style={[styles.playIcon, { borderLeftColor: theme.colors.white }]} />
         </Pressable>
-      </View>
-
-      <View style={styles.progressContainer}>
-        <View
-          style={[
-            styles.progressBar,
-            { backgroundColor: theme.colors.border },
-          ]}
-        >
-          <View
-            style={[
-              styles.progress,
-              { backgroundColor: theme.colors.primaryDark },
-            ]}
-          />
-        </View>
-        <View style={styles.timeRow}>
-          <ThemedText color="textMuted" style={theme.typography.caption}>
-            0:00
-          </ThemedText>
-          <ThemedText color="textMuted" style={theme.typography.caption}>
-            2:15
-          </ThemedText>
-        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    marginBottom: 30,
-    padding: 16,
-  },
-  header: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  info: {
-    flex: 1,
-    paddingRight: 15,
-  },
-  title: {
-    marginBottom: 4,
-  },
+  card: { borderRadius: 16, marginBottom: 18, padding: 16 },
+  header: { alignItems: "center", flexDirection: "row" },
+  info: { flex: 1, paddingRight: 15, gap: 6 },
   playButton: {
     alignItems: "center",
     borderRadius: 25,
-    elevation: 3,
     height: 50,
     justifyContent: "center",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
     width: 50,
+    opacity: 0.5,
   },
   playIcon: {
     backgroundColor: "transparent",
@@ -115,23 +57,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 10,
     height: 0,
     marginLeft: 4,
-    width: 0,
-  },
-  progressContainer: {
-    width: "100%",
-  },
-  progressBar: {
-    borderRadius: 2,
-    height: 4,
-    marginBottom: 8,
-  },
-  progress: {
-    borderRadius: 2,
-    height: "100%",
-    width: "30%",
-  },
-  timeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });

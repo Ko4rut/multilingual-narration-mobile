@@ -62,3 +62,28 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Explore API integration (feature/api-explore)
+
+Explore gọi API công khai của FastAPI: `GET /api/v1/pois`,
+`GET /api/v1/pois/{poi_id}` và
+`GET /api/v1/pois/{poi_id}/narration?language_code=en`.
+Không còn sử dụng `MOCK_POIS` trong Explore (Map vẫn có fixture riêng).
+
+1. Chạy backend theo README của `multilingual-narration-backend`
+   và kiểm tra `http://localhost:8000/docs`.
+2. Tại thư mục gốc Mobile, tạo `.env.local` từ `.env.example`.
+   Với Android Emulator, giữ `http://10.0.2.2:8000/api/v1`.
+   Với điện thoại thật, thay `10.0.2.2` bằng IP LAN của máy chạy backend.
+3. Chạy `npm ci` rồi `npm run android` để build development app.
+   Các lần sau dùng `npm run start:android`. Khởi động lại Metro sau khi đổi env.
+
+Explore tải toàn bộ trang POI public (giới hạn 100 item/request) và tìm kiếm
+theo tên/địa chỉ trên thiết bị. Public POI API chưa trả category, narration
+script hoặc khoảng cách người dùng; do đó card không hiển thị category/khoảng
+cách giả. Chi tiết gọi riêng narration API; trường hợp 404 hiển thị trạng thái
+chưa có bản thuyết minh. Audio playback, lựa chọn ngôn ngữ từ Settings và
+geofencing chưa nằm trong phạm vi tích hợp này.
+
+Nếu Android không cho phép kết nối HTTP thuần khi chạy local, kiểm tra chính
+sách cleartext traffic của development build; production nên dùng HTTPS.

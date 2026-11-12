@@ -15,12 +15,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { formatDistance } from "@/utils/format-distance";
 
 import { EXPLORE_IMAGES } from "../constants/explore-assets";
-import type { ExplorePointOfInterest } from "../types/explore.types";
-
-type PoiCardProps = {
-  poi: ExplorePointOfInterest;
-  onPress?(poi: ExplorePointOfInterest): void;
-};
+import type { PoiCardProps } from "../types/explore.types";
 
 // COMPONENT TẠO THẺ DANH MỤC CÓ NỀN TRẮNG
 function CategoryBadge({ category }: { category: string }) {
@@ -131,7 +126,7 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
   return (
     <Pressable
       accessibilityHint="Opens details and narration for this point of interest"
-      accessibilityLabel={`${poi.name}, ${formatDistance(poi.distanceMeters)} away`}
+      accessibilityLabel={poi.distanceMeters === null ? poi.name : `${poi.name}, ${formatDistance(poi.distanceMeters)} away`}
       accessibilityRole="button"
       onPress={handlePress}
       style={getCardStyle}
@@ -157,28 +152,30 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
         ]}
       >
         <View style={[styles.metaRow, { gap: theme.spacing.sm }]}>
-          <CategoryMarquee categories={poi.categories} />
+          {poi.categories.length > 0 && <CategoryMarquee categories={poi.categories} />}
 
-          <View style={styles.distance}>
-            <Image
-              source={EXPLORE_IMAGES.mapPin}
-              style={{
-                width: 14,
-                height: 14,
-                tintColor: theme.colors.primaryDark,
-                marginRight: 4,
-              }}
-              contentFit="contain"
-            />
-            <Text
-              style={[
-                theme.typography.label,
-                { color: theme.colors.primaryDark, fontSize: 13 },
-              ]}
-            >
-              {formatDistance(poi.distanceMeters)}
-            </Text>
-          </View>
+          {poi.distanceMeters !== null && (
+            <View style={styles.distance}>
+              <Image
+                source={EXPLORE_IMAGES.mapPin}
+                style={{
+                  width: 14,
+                  height: 14,
+                  tintColor: theme.colors.primaryDark,
+                  marginRight: 4,
+                }}
+                contentFit="contain"
+              />
+              <Text
+                style={[
+                  theme.typography.label,
+                  { color: theme.colors.primaryDark, fontSize: 13 },
+                ]}
+              >
+                {formatDistance(poi.distanceMeters)}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Tên và mô tả POI */}
