@@ -1,0 +1,42 @@
+name: Validate refactored offline Android source
+on:
+  push:
+    branches: [feat/hcm-required-offline-map]
+    paths:
+      - "src/app/_layout.tsx"
+      - "src/features/offline/**"
+      - "src/features/map/**"
+      - "src/features/startup/**"
+      - "src/components/ui/collapsible.tsx"
+      - "metro.config.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/check-offline-refactor.yml"
+      - "scripts/check-offline-code-style.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+      - name: Enforce explicit offline code style
+        run: node scripts/check-offline-code-style.mjs
+      - name: Confirm bundled offline assets
+        run: |
+          test "$(find 'assets/glyphs/Noto Sans Regular' -maxdepth 1 -name '*.pbf' | wc -l)" -eq 9
+          test -s assets/maps/hcm-metropolitan.pmtiles
