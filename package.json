@@ -7,6 +7,7 @@
     "@maplibre/maplibre-react-native": "^11.4.0",
     "expo": "~57.0.22",
     "expo-asset": "~57.0.18",
+    "expo-audio": "~57.0.5",
     "expo-camera": "~57.0.5",
     "expo-constants": "~57.0.18",
     "expo-device": "~57.0.2",
