@@ -43,7 +43,7 @@ export function QrScanInstructions() {
           color="textSecondary"
           style={[theme.typography.caption, styles.tipText]}
         >
-          Scanning automatically downloads the correct language package and begins the audio narrative immediately.
+          Scan a valid QR code to start its published narration automatically.
         </ThemedText>
       </View>
     </View>
