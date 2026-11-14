@@ -4,7 +4,6 @@
  */
 import type {
   QrResolveRequest,
-  QrResolveResponse,
   ResolvedQrAudio,
 } from "../types/qr-scan.types";
 
@@ -169,22 +168,21 @@ function mapResolvedAudio(
     throw new Error("Nguồn âm thanh từ backend không được hỗ trợ.");
   }
 
-  // Sau khi kiểm tra các field cần dùng, áp dụng contract của backend cho mapper.
-  const response = rawResponse as unknown as QrResolveResponse;
-  const normalizedAudioUrl = normalizeAudioUrl(response.narration.audio.audio_url, apiBaseUrl);
+  // Sử dụng trực tiếp các field đã kiểm tra ở trên, không ép kiểu JSON mù.
+  const normalizedAudioUrl = normalizeAudioUrl(audio.audio_url, apiBaseUrl);
 
   return {
     qrCode: scannedQrCode,
-    poiId: response.poi.id,
-    poiName: response.poi.poi_name,
-    contentId: response.narration.content_id,
-    narrationTitle: response.narration.narration_title,
-    languageCode: response.narration.language_code,
-    requestedLanguageCode: response.narration.requested_language_code,
-    isFallback: response.narration.is_fallback,
+    poiId: poi.id,
+    poiName: poi.poi_name,
+    contentId: narration.content_id,
+    narrationTitle: narration.narration_title,
+    languageCode: narration.language_code,
+    requestedLanguageCode: narration.requested_language_code,
+    isFallback: narration.is_fallback,
     audioUrl: normalizedAudioUrl,
-    durationSeconds: response.narration.audio.audio_duration_sec,
-    audioSourceType: response.narration.audio.audio_source_type,
+    durationSeconds: audio.audio_duration_sec,
+    audioSourceType: audio.audio_source_type,
   };
 }
 
