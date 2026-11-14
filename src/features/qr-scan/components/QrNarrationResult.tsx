@@ -1,14 +1,15 @@
 /**
- * Hiển thị POI và metadata MP3 trả về sau QR Resolve thành công.
- * Nút mở MP3 chỉ dùng để kiểm thử asset bằng trình duyệt/ứng dụng hệ thống;
- * trình phát audio native sẽ là một tính năng độc lập trong bước tiếp theo.
+ * Hiển thị POI và narration trả về sau khi QR Resolve thành công.
+ * QrAudioPlayer tự load và phát MP3 ngay khi component kết quả xuất hiện.
+ * "Quét mã khác" sẽ unmount player hiện tại rồi mở lại camera.
  */
-import { Alert, Linking, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 
 import type { ResolvedQrAudio } from "../types/qr-scan.types";
+import { QrAudioPlayer } from "./QrAudioPlayer";
 
 interface QrNarrationResultProps {
   audio: ResolvedQrAudio;
@@ -20,7 +21,6 @@ export function QrNarrationResult({
   onScanAgain,
 }: QrNarrationResultProps) {
   const theme = useTheme();
-
   let fallbackNotice = "";
 
   if (audio.isFallback) {
@@ -30,29 +30,13 @@ export function QrNarrationResult({
     fallbackNotice = "Đã tìm thấy audio theo ngôn ngữ yêu cầu.";
   }
 
-  async function handleOpenAudio(): Promise<void> {
-    try {
-      // Không gọi URL này để tăng listening. Mở MP3 chỉ phục vụ kiểm thử.
-      await Linking.openURL(audio.audioUrl);
-    } catch (cause) {
-      Alert.alert(
-        "Không mở được file âm thanh",
-        "Hãy kiểm tra kết nối mạng và địa chỉ audio_url từ backend.",
-      );
-    }
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
-      <ThemedText
-        style={[theme.typography.sectionTitle, styles.title]}
-      >
+      <ThemedText style={[theme.typography.sectionTitle, styles.title]}>
         Đã xác định audio
       </ThemedText>
 
-      <ThemedText
-        style={[theme.typography.title, styles.poiName]}
-      >
+      <ThemedText style={[theme.typography.title, styles.poiName]}>
         {audio.poiName}
       </ThemedText>
 
@@ -84,19 +68,12 @@ export function QrNarrationResult({
         {fallbackNotice}
       </ThemedText>
 
-      <ThemedText color="textMuted" selectable style={styles.audioUrl}>
-        {audio.audioUrl}
-      </ThemedText>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={handleOpenAudio}
-        style={[styles.primaryButton, { backgroundColor: theme.colors.primary }]}
-      >
-        <ThemedText style={[styles.primaryButtonText, { color: theme.colors.white }]}>
-          Mở file MP3 để kiểm thử
-        </ThemedText>
-      </Pressable>
+      {/* Component riêng dùng expo-audio để tự load và phát MP3 trong app. */}
+      <QrAudioPlayer
+        key={audio.contentId}
+        audioUrl={audio.audioUrl}
+        durationSeconds={audio.durationSeconds}
+      />
 
       <Pressable
         accessibilityRole="button"
@@ -135,27 +112,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
-  audioUrl: {
-    marginTop: 12,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  primaryButton: {
-    alignItems: "center",
-    borderRadius: 12,
-    marginTop: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
   secondaryButton: {
     alignItems: "center",
     borderWidth: 1,
     borderRadius: 12,
-    marginTop: 6,
+    marginTop: 16,
     paddingVertical: 14,
     paddingHorizontal: 12,
   },
