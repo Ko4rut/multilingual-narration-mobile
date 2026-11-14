@@ -43,7 +43,7 @@ export function QrScanInstructions() {
           color="textSecondary"
           style={[theme.typography.caption, styles.tipText]}
         >
-          Scan a QR code to find its published narration audio. The MP3 link will be shown after verification.
+          Scan a valid QR code to start its published narration automatically.
         </ThemedText>
       </View>
     </View>
