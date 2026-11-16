@@ -23,7 +23,10 @@ export interface QrAudioPlaybackController {
   replayPlayback: () => Promise<void>;
 }
 
-export function useQrAudioPlayback(audioUrl: string): QrAudioPlaybackController {
+export function useQrAudioPlayback(
+  audioUrl: string,
+  onPlaybackStarted: () => void,
+): QrAudioPlaybackController {
   // Chỉ tạo một player cho URL hiện tại, dùng streaming từ backend.
   const player = useAudioPlayer(audioUrl, {
     updateInterval: 500,
@@ -34,6 +37,8 @@ export function useQrAudioPlayback(audioUrl: string): QrAudioPlaybackController 
   const isFocused = useIsFocused();
   const autoPlayRequestedRef = useRef<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [playbackSequence, setPlaybackSequence] = useState(0);
+  const lastReportedSequenceRef = useRef<number>(-1);
 
   useEffect(function startAudioAfterLoadEffect() {
     // Không tự phát trước khi nguồn âm thanh được load thành công.
@@ -100,6 +105,19 @@ export function useQrAudioPlayback(audioUrl: string): QrAudioPlaybackController 
     player.pause();
   }, [isFocused, player]);
 
+  // Count only actual playback starts, not QR scans or downloaded MP3 files.
+  // Pause/resume does not create a new session; replay from the start does.
+  useEffect(function reportActualPlaybackStartEffect() {
+    if (!isFocused || !status.playing) {
+      return;
+    }
+    if (lastReportedSequenceRef.current === playbackSequence) {
+      return;
+    }
+    lastReportedSequenceRef.current = playbackSequence;
+    onPlaybackStarted();
+  }, [isFocused, status.playing, playbackSequence, onPlaybackStarted]);
+
   function pausePlayback(): void {
     player.pause();
   }
@@ -113,10 +131,12 @@ export function useQrAudioPlayback(audioUrl: string): QrAudioPlaybackController 
       }
 
       // Nếu bài đã kết thúc, nhấn Phát sẽ phát lại từ đầu.
-      if (status.didJustFinish) {
+      if (
+        status.didJustFinish ||
+        (status.duration > 0 && status.currentTime >= status.duration)
+      ) {
         await player.seekTo(0);
-      } else if (status.duration > 0 && status.currentTime >= status.duration) {
-        await player.seekTo(0);
+        setPlaybackSequence((previous) => previous + 1);
       }
 
       player.play();
@@ -138,6 +158,7 @@ export function useQrAudioPlayback(audioUrl: string): QrAudioPlaybackController 
       }
 
       await player.seekTo(0);
+      setPlaybackSequence((previous) => previous + 1);
       player.play();
     } catch (cause) {
       if (cause instanceof Error) {

@@ -28,7 +28,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Địa chỉ backend phải đến từ môi trường chạy Mobile.
  * Không được dùng localhost khi điện thoại thật kết nối tới backend trên PC.
  */
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   const configuredUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
   if (typeof configuredUrl !== "string") {

@@ -4,14 +4,18 @@
  * Component được mount sau khi API Resolve thành công, vì thế hook audio
  * có thể tự tải và phát URL mà không cần người dùng nhấn nút Play.
  */
+import { useCallback } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 
 import { useQrAudioPlayback } from "../hooks/useQrAudioPlayback";
+import { recordQrListeningStart } from "../services/qr-listening.api";
 
 interface QrAudioPlayerProps {
+  qrCode: string;
+  contentId: string;
   audioUrl: string;
   durationSeconds: number;
 }
@@ -37,17 +41,35 @@ function formatAudioTime(seconds: number): string {
 }
 
 export function QrAudioPlayer({
+  qrCode,
+  contentId,
   audioUrl,
   durationSeconds,
 }: QrAudioPlayerProps) {
   const theme = useTheme();
+  const handlePlaybackStarted = useCallback(() => {
+    // Tracking is best-effort; an analytics failure must not interrupt playback.
+    void recordQrListeningStart({
+      qrCode,
+      poiContentId: contentId,
+    })
+      .then((ack) => {
+        if (__DEV__) {
+          console.log("[QR LISTENING] saved", ack.id, ack.result);
+        }
+      })
+      .catch((error: unknown) => {
+        console.warn("[QR LISTENING] could not save listening session:", error);
+      });
+  }, [qrCode, contentId]);
+
   const {
     status,
     errorMessage,
     pausePlayback,
     resumePlayback,
     replayPlayback,
-  } = useQrAudioPlayback(audioUrl);
+  } = useQrAudioPlayback(audioUrl, handlePlaybackStarted);
 
   let durationToDisplay = durationSeconds;
 

@@ -71,6 +71,8 @@ export function QrNarrationResult({
       {/* Component riêng dùng expo-audio để tự load và phát MP3 trong app. */}
       <QrAudioPlayer
         key={audio.contentId}
+        qrCode={audio.qrCode}
+        contentId={audio.contentId}
         audioUrl={audio.audioUrl}
         durationSeconds={audio.durationSeconds}
       />

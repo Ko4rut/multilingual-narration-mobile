@@ -21,7 +21,7 @@
 5. UI hiển thị POI, content, ngôn ngữ và trình phát MP3 nội bộ. Player tự phát sau khi tải thành công.
 6. "Quét mã QR khác" reset hook, mở camera để quét tiếp.
 
-**Phạm vi hiện tại:** tự phát MP3 trong ứng dụng khi QR hợp lệ, nhưng **chưa** tạo listening event. Chỉ gọi `POST /api/v1/listening/qr-scans` khi player báo audio thực sự bắt đầu phát; tránh tính lượt nghe khi chưa mở được MP3.
+**Listening analytics:** Khi player xác nhận `status.playing`, app gửi `POST /api/v1/listening/qr-scans` với ID sự kiện `listen-ddmmyy-xxxxxxxx`, `installation_id` được lưu trên thiết bị, mã QR và `poi_content_id` đã resolve. Một lượt QR tạo một listening session; tạm dừng/tiếp tục không tạo lượt mới, còn bấm "Phát lại" sẽ tạo một phiên mới. Việc ghi thất bại chỉ cảnh báo trong Metro, không ngắt audio; chưa có offline retry queue. Dashboard đọc tổng lượt nghe từ database, nên cần làm mới trang Dashboard để thấy giá trị mới.
 
 ## Chạy trên điện thoại
 
