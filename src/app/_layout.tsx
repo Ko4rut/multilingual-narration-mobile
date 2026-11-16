@@ -15,11 +15,40 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 import { BundledMapUriContext } from "@/features/offline/context/BundledMapContext";
+import { LanguagePreferenceProvider, useLanguagePreference } from "@/features/settings/context/LanguagePreferenceContext";
 import { useOfflineResources } from "@/features/offline/hooks/useOfflineResources";
 import AppSplash from "@/features/startup/components/AppSplash";
 import { useStartup } from "@/features/startup/hooks/useStartup";
 
 void SplashScreen.preventAutoHideAsync().catch(console.warn);
+
+function ReadyNavigation({
+  resources,
+  backgroundColor,
+}: {
+  resources: NonNullable<ReturnType<typeof useOfflineResources>["resources"]>;
+  backgroundColor: string;
+}) {
+  const { isReady } = useLanguagePreference();
+
+  // Do not mount QR Scanner or Settings until the saved language has been restored.
+  if (!isReady) {
+    return <AppSplash />;
+  }
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <BundledMapUriContext.Provider value={resources}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor },
+          }}
+        />
+      </BundledMapUriContext.Provider>
+    </GestureHandlerRootView>
+  );
+}
 
 export default function RootLayout() {
   const startup = useStartup();
@@ -87,16 +116,12 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <BundledMapUriContext.Provider value={offline.resources}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
-      </BundledMapUriContext.Provider>
-    </GestureHandlerRootView>
+    <LanguagePreferenceProvider>
+      <ReadyNavigation
+        resources={offline.resources}
+        backgroundColor={theme.colors.background}
+      />
+    </LanguagePreferenceProvider>
   );
 }
 

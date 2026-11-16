@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Appearance, useColorScheme } from "react-native";
 
 import { DEFAULT_SETTINGS_PREFERENCES } from "../constants/preferences";
+import { useLanguagePreference } from "../context/LanguagePreferenceContext";
 import {
   MOCK_AUDIO_QUALITY_OPTIONS,
   MOCK_LANGUAGE_OPTIONS,
@@ -37,15 +38,13 @@ function findAudioQualityById(audioQualityId: string) {
 
 export function useSettingsPreferences() {
   const colorScheme = useColorScheme();
+  const { selectedLanguageId, setSelectedLanguageId } = useLanguagePreference();
   const [isAutoplayEnabled, setIsAutoplayEnabled] = useState<boolean>(
     DEFAULT_SETTINGS_PREFERENCES.autoplayEnabled,
   );
   const [isLanguagePickerVisible, setIsLanguagePickerVisible] = useState(false);
   const [isAudioQualityPickerVisible, setIsAudioQualityPickerVisible] =
     useState(false);
-  const [selectedLanguageId, setSelectedLanguageId] = useState<string>(
-    DEFAULT_SETTINGS_PREFERENCES.languageId,
-  );
   const [selectedAudioQualityId, setSelectedAudioQualityId] = useState<string>(
     DEFAULT_SETTINGS_PREFERENCES.audioQualityId,
   );

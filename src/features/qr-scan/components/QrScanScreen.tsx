@@ -14,6 +14,7 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
+import { useLanguagePreference } from "@/features/settings/context/LanguagePreferenceContext";
 
 import { useQrResolution } from "../hooks/useQrResolution";
 import { useQrScan } from "../hooks/useQrScan";
@@ -23,6 +24,7 @@ import { QrScanViewfinder } from "./QrScanViewfinder";
 
 export default function QrScanScreen() {
   const theme = useTheme();
+  const { languageCode } = useLanguagePreference();
 
   const {
     status,
@@ -34,11 +36,10 @@ export default function QrScanScreen() {
 
   const handleQrCodeScanned = useCallback(
     function handleQrCodeScanned(qrCode: string): void {
-      // Mặc định tiếng Anh theo cấu hình demo hiện tại.
-      // Khi app có preference ngôn ngữ dùng chung, truyền code đó vào đây.
-      void resolveScannedQr(qrCode, "en");
+      // The narration language follows the user's current Settings preference.
+      void resolveScannedQr(qrCode, languageCode);
     },
-    [resolveScannedQr],
+    [languageCode, resolveScannedQr],
   );
 
   const {
