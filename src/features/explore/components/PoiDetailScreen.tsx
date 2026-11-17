@@ -1,5 +1,6 @@
 /** Màn hình chi tiết POI, nhận điều hướng từ route và render dữ liệu feature. */
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -10,31 +11,52 @@ import {
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { NarrationAudioPlayer } from "@/features/audio/components/NarrationAudioPlayer";
+import { QrAudioPlayer } from "@/features/qr-scan/components/QrAudioPlayer";
+import { useLanguagePreference } from "@/features/settings/context/LanguagePreferenceContext";
 import { useTheme } from "@/hooks/use-theme";
+import {
+  usePublicPoi,
+  usePublicPoiNarration,
+} from "@/hooks/use-public-pois";
 import { formatDistance } from "@/utils/format-distance";
 
 import { EXPLORE_IMAGES } from "../constants/explore-assets";
-import { MOCK_POIS } from "../data/mock-pois";
 import { PoiDetailHero } from "./PoiDetailHero";
-import { PoiNarrationPlayer } from "./PoiNarrationPlayer";
 
 type PoiDetailScreenProps = {
   poiId: string;
+  sourceQrCode?: string;
   onBack(): void;
 };
 
 export default function PoiDetailScreen({
   poiId,
+  sourceQrCode,
   onBack,
 }: PoiDetailScreenProps) {
   const theme = useTheme();
-  const poi = MOCK_POIS.find((candidate) => candidate.id === poiId);
+  const { languageCode } = useLanguagePreference();
+  const { poi, errorMessage, isLoading } = usePublicPoi(poiId);
+  const {
+    narration,
+    errorMessage: narrationError,
+    isLoading: isNarrationLoading,
+  } = usePublicPoiNarration(poiId, languageCode);
+
+  if (isLoading) {
+    return (
+      <ThemedView style={[styles.container, styles.notFound]}>
+        <ActivityIndicator color={theme.colors.primary} size="large" />
+      </ThemedView>
+    );
+  }
 
   if (!poi) {
     return (
       <ThemedView style={[styles.container, styles.notFound]}>
         <ThemedText color="textPrimary" style={theme.typography.heading}>
-          Không tìm thấy địa điểm!
+          {errorMessage ?? "Không tìm thấy địa điểm!"}
         </ThemedText>
         <Pressable
           accessibilityRole="button"
@@ -81,7 +103,7 @@ export default function PoiDetailScreen({
               </ThemedText>
             </View>
 
-            <View
+            {poi.distanceMeters !== null ? <View
               style={[
                 styles.distanceBadge,
                 { backgroundColor: theme.colors.surface },
@@ -102,33 +124,71 @@ export default function PoiDetailScreen({
               >
                 {formatDistance(poi.distanceMeters)}
               </Text>
-            </View>
+            </View> : null}
           </View>
 
-          <PoiNarrationPlayer poiName={poi.name} />
+          {isNarrationLoading ? (
+            <View style={styles.audioFeedback}>
+              <ActivityIndicator color={theme.colors.primary} size="large" />
+              <ThemedText color="textSecondary">
+                Loading published narration...
+              </ThemedText>
+            </View>
+          ) : narration === null ? (
+            <View
+              style={[
+                styles.audioFeedback,
+                { backgroundColor: theme.colors.surface },
+              ]}
+            >
+              <ThemedText color="textSecondary">
+                {narrationError ?? "No published narration is available."}
+              </ThemedText>
+            </View>
+          ) : (
+            <>
+              <ThemedText
+                color="textPrimary"
+                style={[theme.typography.sectionTitle, styles.narrationTitle]}
+              >
+                {narration.title}
+              </ThemedText>
+              {narration.isFallback ? (
+                <ThemedText color="textSecondary" style={styles.fallbackNotice}>
+                  The {narration.requestedLanguageCode} narration is unavailable.
+                  Playing {narration.languageCode} instead.
+                </ThemedText>
+              ) : null}
+              {sourceQrCode === undefined ? (
+                <NarrationAudioPlayer
+                  key={narration.contentId}
+                  audioUrl={narration.audioUrl}
+                  durationSeconds={narration.durationSeconds}
+                />
+              ) : (
+                <QrAudioPlayer
+                  key={narration.contentId}
+                  qrCode={sourceQrCode}
+                  contentId={narration.contentId}
+                  audioUrl={narration.audioUrl}
+                  durationSeconds={narration.durationSeconds}
+                />
+              )}
+            </>
+          )}
 
           <View style={styles.scriptSection}>
             <ThemedText
               color="textPrimary"
               style={[theme.typography.sectionTitle, styles.scriptTitle]}
             >
-              Historic Narration Script
+              Narration Script
             </ThemedText>
             <ThemedText
               color="textSecondary"
               style={[theme.typography.body, styles.scriptParagraph]}
             >
-              {poi.description}
-            </ThemedText>
-            <ThemedText
-              color="textSecondary"
-              style={[theme.typography.body, styles.scriptParagraph]}
-            >
-              Welcome to {poi.name}. As you explore this{" "}
-              {poi.categories[0]?.toLowerCase() || "landmark"}, you will
-              discover its unique history and significance to the city.
-              Narration is automatically triggered when you enter the virtual
-              geofence.
+              {narration?.script ?? poi.description}
             </ThemedText>
           </View>
         </View>
@@ -180,6 +240,19 @@ const styles = StyleSheet.create({
   },
   scriptSection: {
     marginTop: 10,
+  },
+  audioFeedback: {
+    alignItems: "center",
+    borderRadius: 16,
+    gap: 12,
+    marginTop: 16,
+    padding: 20,
+  },
+  narrationTitle: {
+    marginTop: 8,
+  },
+  fallbackNotice: {
+    marginTop: 6,
   },
   scriptTitle: {
     fontSize: 20,

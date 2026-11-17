@@ -25,6 +25,7 @@ import type {
     AudioQualityOption,
     LanguageOption,
 } from "../types/settings.types";
+import { DemoApiSettings } from "./DemoApiSettings";
 import { SettingsOptionPickerModal } from "./SettingsOptionPickerModal";
 import { SettingsRow } from "./SettingsRow";
 import { SettingsSection } from "./SettingsSection";
@@ -170,6 +171,11 @@ export default function SettingsScreen() {
             onPress={handleVoicePartnersPress}
             showChevron
           />
+        </SettingsSection>
+
+        {/* Cho phép điện thoại dùng IP LAN của laptop khi demo. */}
+        <SettingsSection title="API Settings for Demo">
+          <DemoApiSettings />
         </SettingsSection>
       </ScrollView>
 

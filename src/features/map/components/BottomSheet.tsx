@@ -1,5 +1,6 @@
 /** Bottom sheet tìm kiếm và hiển thị các POI gần khu vực bản đồ. */
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -18,14 +19,15 @@ import Animated from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/use-theme";
 
-import { MOCK_POIS } from "../data/mock-pois";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 import { usePoiSearch } from "../hooks/usePoiSearch";
 import type { PointOfInterest } from "../types";
 import { PoiCard } from "./PoiCard";
 
 type BottomSheetProps = {
-  pois?: PointOfInterest[];
+  pois: PointOfInterest[];
+  errorMessage: string | null;
+  isLoading: boolean;
   onPoiPress?(poi: PointOfInterest): void;
 };
 
@@ -36,7 +38,9 @@ function PoiSeparator() {
 }
 
 export default function BottomSheet({
-  pois = MOCK_POIS,
+  pois,
+  errorMessage,
+  isLoading,
   onPoiPress,
 }: BottomSheetProps) {
   const theme = useTheme();
@@ -156,7 +160,9 @@ export default function BottomSheet({
         ItemSeparatorComponent={PoiSeparator}
         keyboardShouldPersistTaps="handled"
         keyExtractor={getPoiKey}
-        ListEmptyComponent={
+        ListEmptyComponent={isLoading ? (
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        ) : (
           <View
             style={[
               styles.emptyState,
@@ -179,7 +185,9 @@ export default function BottomSheet({
                 { color: theme.colors.textPrimary },
               ]}
             >
-              No points of interest found
+              {errorMessage === null
+                ? "No points of interest found"
+                : "Unable to load points of interest"}
             </Text>
             <Text
               style={[
@@ -188,10 +196,10 @@ export default function BottomSheet({
                 { color: theme.colors.textSecondary },
               ]}
             >
-              Try searching for another name or category.
+              {errorMessage ?? "Try searching for another name or category."}
             </Text>
           </View>
-        }
+        )}
         nestedScrollEnabled
         renderItem={renderPoi}
         showsVerticalScrollIndicator={false}

@@ -5,6 +5,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/hooks/use-theme";
+import { usePublicPois } from "@/hooks/use-public-pois";
 import { isWithinRequiredMap } from "@/features/offline/constants/requiredMap";
 
 import { BOTTOM_SHEET_COLLAPSED_HEIGHT } from "../constants/bottomSheet";
@@ -28,6 +29,12 @@ export default function MapController() {
     longitude = location.coords.longitude;
     canFocus = isWithinRequiredMap(latitude, longitude);
   }
+
+  const currentLocation =
+    latitude === undefined || longitude === undefined
+      ? null
+      : { latitude, longitude };
+  const { pois, errorMessage, isLoading } = usePublicPois(currentLocation);
 
   function focusOnCurrentPosition(): void {
     if (!canFocus || latitude === undefined || longitude === undefined) {
@@ -73,7 +80,11 @@ export default function MapController() {
         </View>
       )}
 
-      <BottomSheet />
+      <BottomSheet
+        errorMessage={errorMessage}
+        isLoading={isLoading}
+        pois={pois}
+      />
     </View>
   );
 }

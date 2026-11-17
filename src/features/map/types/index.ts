@@ -21,6 +21,6 @@ export type PointOfInterest = MapCoordinate & {
   name: string;
   description: string;
   imageUrl: string;
-  distanceMeters: number;
+  distanceMeters: number | null;
   categories: string[];
 };
