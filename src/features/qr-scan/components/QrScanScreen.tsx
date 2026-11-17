@@ -2,11 +2,11 @@
  * Ghép QR Scanner, QR Resolve hook và phần hiển thị audio đã tìm được.
  * UI không thực hiện fetch trực tiếp; camera chỉ hoạt động ở trạng thái idle.
  */
-import { useCallback } from "react";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
@@ -18,13 +18,14 @@ import { useLanguagePreference } from "@/features/settings/context/LanguagePrefe
 
 import { useQrResolution } from "../hooks/useQrResolution";
 import { useQrScan } from "../hooks/useQrScan";
-import { QrNarrationResult } from "./QrNarrationResult";
 import { QrScanInstructions } from "./QrScanInstructions";
 import { QrScanViewfinder } from "./QrScanViewfinder";
 
 export default function QrScanScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { languageCode } = useLanguagePreference();
+  const navigationStartedRef = useRef(false);
 
   const {
     status,
@@ -36,6 +37,7 @@ export default function QrScanScreen() {
 
   const handleQrCodeScanned = useCallback(
     function handleQrCodeScanned(qrCode: string): void {
+      navigationStartedRef.current = false;
       // The narration language follows the user's current Settings preference.
       void resolveScannedQr(qrCode, languageCode);
     },
@@ -48,6 +50,29 @@ export default function QrScanScreen() {
     handleBarcodeScanned,
     resetScan,
   } = useQrScan(handleQrCodeScanned);
+
+  useEffect(function openResolvedPoiDetail() {
+    if (
+      status !== "success" ||
+      resolvedAudio === null ||
+      navigationStartedRef.current
+    ) {
+      return;
+    }
+
+    navigationStartedRef.current = true;
+    router.push({
+      pathname: "/poi/[id]",
+      params: {
+        id: resolvedAudio.poiId,
+        qrCode: resolvedAudio.qrCode,
+      },
+    });
+
+    // Màn hình QR phía sau phải sẵn sàng quét lại khi người dùng quay về.
+    resetResolution();
+    resetScan();
+  }, [resetResolution, resetScan, resolvedAudio, router, status]);
 
   function handleScanAgain(): void {
     // Reset response trước khi mở camera, tránh xử lý lại kết quả cũ.
@@ -96,23 +121,14 @@ export default function QrScanScreen() {
         </View>
       );
     } else if (status === "success") {
-      if (resolvedAudio !== null) {
-        return (
-          <ScrollView
-            contentContainerStyle={styles.resultContent}
-            style={styles.resultScroll}
-            showsVerticalScrollIndicator={false}
-          >
-            <QrNarrationResult audio={resolvedAudio} onScanAgain={handleScanAgain} />
-          </ScrollView>
-        );
-      } else {
-        return (
-          <View style={styles.feedbackArea}>
-            <ThemedText>Không tìm thấy dữ liệu audio để hiển thị.</ThemedText>
-          </View>
-        );
-      }
+      return (
+        <View style={styles.feedbackArea}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ThemedText style={styles.message}>
+            Đang mở chi tiết địa điểm...
+          </ThemedText>
+        </View>
+      );
     } else {
       return (
         <View style={styles.feedbackArea}>
@@ -169,13 +185,5 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 15,
     fontWeight: "700",
-  },
-  resultScroll: {
-    flex: 1,
-  },
-  resultContent: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: "center",
   },
 });

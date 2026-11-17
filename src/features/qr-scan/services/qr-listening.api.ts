@@ -5,7 +5,7 @@
 import { File, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 
-import { getApiBaseUrl } from "./qr-scan.api";
+import { getApiBaseUrl } from "@/services/api-base-url";
 
 const INSTALLATION_STORAGE_KEY = "mnr.listening.installationId";
 const INSTALLATION_STORAGE_FILE = "mnr-listening-installation-id.txt";
@@ -98,7 +98,8 @@ export async function recordQrListeningStart({
     scanned_at: now.toISOString(),
   };
 
-  const response = await fetch(getApiBaseUrl() + "/api/v1/listening/qr-scans", {
+  const apiBaseUrl = await getApiBaseUrl();
+  const response = await fetch(apiBaseUrl + "/api/v1/listening/qr-scans", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event),

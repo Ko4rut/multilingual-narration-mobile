@@ -121,6 +121,8 @@ function CategoryMarquee({ categories }: CategoryMarqueeProps) {
 
 export function PoiCard({ poi, onPress }: PoiCardProps) {
   const theme = useTheme();
+  const distanceLabel =
+    poi.distanceMeters === null ? null : formatDistance(poi.distanceMeters);
 
   function handlePress() {
     onPress?.(poi);
@@ -141,7 +143,9 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
     // Toàn bộ card là vùng nhấn để mở trang chi tiết POI.
     <Pressable
       accessibilityHint="Opens details and narration for this point of interest"
-      accessibilityLabel={`${poi.name}, ${formatDistance(poi.distanceMeters)} away`}
+      accessibilityLabel={
+        distanceLabel === null ? poi.name : `${poi.name}, ${distanceLabel} away`
+      }
       accessibilityRole="button"
       onPress={handlePress}
       style={getCardStyle}
@@ -172,7 +176,7 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
           {/* Category giữ trên một dòng và tự chạy khi vượt quá chiều rộng khả dụng. */}
           <CategoryMarquee categories={poi.categories} />
 
-          <View
+          {distanceLabel !== null ? <View
             style={[
               styles.distance,
               {
@@ -196,9 +200,9 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
                 { color: theme.colors.primaryDark },
               ]}
             >
-              {formatDistance(poi.distanceMeters)}
+              {distanceLabel}
             </Text>
-          </View>
+          </View> : null}
         </View>
 
         {/* Tên và mô tả giới hạn một dòng để các card giữ bố cục đồng đều. */}

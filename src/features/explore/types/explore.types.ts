@@ -4,7 +4,7 @@ export type ExplorePointOfInterest = {
   name: string;
   description: string;
   imageUrl: string;
-  distanceMeters: number;
+  distanceMeters: number | null;
   categories: string[];
   latitude: number;
   longitude: number;

@@ -1,6 +1,8 @@
 /** Màn hình khám phá: hiển thị danh sách POI và điều hướng tới trang chi tiết. */
 import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   ScrollView,
@@ -12,15 +14,34 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/hooks/use-theme";
+import { usePublicPois } from "@/hooks/use-public-pois";
+import { useUserLocation } from "@/features/map/hooks/useUserLocation";
 
 import { EXPLORE_IMAGES } from "../constants/explore-assets";
-import { MOCK_POIS } from "../data/mock-pois";
 import type { ExplorePointOfInterest } from "../types/explore.types";
 import { PoiCard } from "./PoiCard";
 
 export default function ExploreScreen() {
   const router = useRouter();
   const theme = useTheme();
+  const { location } = useUserLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const currentLocation = location === null ? null : {
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+  };
+  const { pois, errorMessage, isLoading } = usePublicPois(currentLocation);
+  const filteredPois = useMemo(function filterPois() {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase("en");
+
+    if (normalizedQuery.length === 0) {
+      return pois;
+    }
+
+    return pois.filter((poi) =>
+      poi.name.toLocaleLowerCase("en").includes(normalizedQuery),
+    );
+  }, [pois, searchQuery]);
 
   function handlePoiPress(poi: ExplorePointOfInterest) {
     router.push({
@@ -70,6 +91,7 @@ export default function ExploreScreen() {
           />
           <TextInput
             accessibilityLabel="Search points of interest"
+            onChangeText={setSearchQuery}
             placeholder="Search point of interest..."
             placeholderTextColor={theme.colors.textSecondary}
             returnKeyType="search"
@@ -78,6 +100,7 @@ export default function ExploreScreen() {
               styles.searchInput,
               { color: theme.colors.textPrimary },
             ]}
+            value={searchQuery}
           />
         </View>
 
@@ -102,11 +125,19 @@ export default function ExploreScreen() {
         showsVerticalScrollIndicator={false}
         style={styles.listScroll}
       >
-        <View style={styles.listItems}>
-          {MOCK_POIS.map((poi) => (
-            <PoiCard key={poi.id} poi={poi} onPress={handlePoiPress} />
-          ))}
-        </View>
+        {isLoading ? (
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        ) : errorMessage !== null ? (
+          <ThemedText color="textSecondary" style={styles.feedbackText}>
+            {errorMessage}
+          </ThemedText>
+        ) : (
+          <View style={styles.listItems}>
+            {filteredPois.map((poi) => (
+              <PoiCard key={poi.id} poi={poi} onPress={handlePoiPress} />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </ThemedView>
   );
@@ -160,5 +191,9 @@ const styles = StyleSheet.create({
   },
   listItems: {
     gap: 15,
+  },
+  feedbackText: {
+    paddingVertical: 24,
+    textAlign: "center",
   },
 });

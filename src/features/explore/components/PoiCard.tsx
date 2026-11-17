@@ -112,6 +112,8 @@ function CategoryMarquee({ categories }: { categories: string[] }) {
 // COMPONENT CHÍNH CỦA POI CARD
 export function PoiCard({ poi, onPress }: PoiCardProps) {
   const theme = useTheme();
+  const distanceLabel =
+    poi.distanceMeters === null ? null : formatDistance(poi.distanceMeters);
 
   function handlePress() {
     onPress?.(poi);
@@ -131,7 +133,9 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
   return (
     <Pressable
       accessibilityHint="Opens details and narration for this point of interest"
-      accessibilityLabel={`${poi.name}, ${formatDistance(poi.distanceMeters)} away`}
+      accessibilityLabel={
+        distanceLabel === null ? poi.name : `${poi.name}, ${distanceLabel} away`
+      }
       accessibilityRole="button"
       onPress={handlePress}
       style={getCardStyle}
@@ -159,7 +163,7 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
         <View style={[styles.metaRow, { gap: theme.spacing.sm }]}>
           <CategoryMarquee categories={poi.categories} />
 
-          <View style={styles.distance}>
+          {distanceLabel !== null ? <View style={styles.distance}>
             <Image
               source={EXPLORE_IMAGES.mapPin}
               style={{
@@ -176,9 +180,9 @@ export function PoiCard({ poi, onPress }: PoiCardProps) {
                 { color: theme.colors.primaryDark, fontSize: 13 },
               ]}
             >
-              {formatDistance(poi.distanceMeters)}
+              {distanceLabel}
             </Text>
-          </View>
+          </View> : null}
         </View>
 
         {/* Tên và mô tả POI */}

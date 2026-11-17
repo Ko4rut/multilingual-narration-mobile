@@ -4,8 +4,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import PoiDetailScreen from "@/features/explore/components/PoiDetailScreen";
 
 export default function PoiDetailRoute() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, qrCode } = useLocalSearchParams<{
+    id: string;
+    qrCode?: string;
+  }>();
   const router = useRouter();
 
-  return <PoiDetailScreen onBack={() => router.back()} poiId={id} />;
+  return (
+    <PoiDetailScreen
+      onBack={() => router.back()}
+      poiId={id}
+      sourceQrCode={qrCode}
+    />
+  );
 }

@@ -1,5 +1,5 @@
 /**
- * Quản lý phát audio thuyết minh cho kết quả QR.
+ * Quản lý phát audio thuyết minh dùng chung cho QR và Explore.
  *
  * Mỗi lần mở kết quả QR sẽ có một player riêng. useAudioPlayer tự giải phóng
  * player khi component unmount, tránh phát chồng sau khi chọn "Quét mã khác".
@@ -15,7 +15,7 @@ import {
 import { useIsFocused } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
-export interface QrAudioPlaybackController {
+export interface AudioPlaybackController {
   status: AudioStatus;
   errorMessage: string | null;
   pausePlayback: () => void;
@@ -23,10 +23,10 @@ export interface QrAudioPlaybackController {
   replayPlayback: () => Promise<void>;
 }
 
-export function useQrAudioPlayback(
+export function useAudioPlayback(
   audioUrl: string,
   onPlaybackStarted: () => void,
-): QrAudioPlaybackController {
+): AudioPlaybackController {
   // Chỉ tạo một player cho URL hiện tại, dùng streaming từ backend.
   const player = useAudioPlayer(audioUrl, {
     updateInterval: 500,
@@ -46,7 +46,7 @@ export function useQrAudioPlayback(
       return;
     }
 
-    // Không phát âm thanh của tab QR khi người dùng đã rời màn hình.
+    // Không phát âm thanh khi người dùng đã rời màn hình hiện tại.
     if (!isFocused) {
       return;
     }
@@ -95,7 +95,7 @@ export function useQrAudioPlayback(
     };
   }, [isFocused, player, status.isLoaded]);
 
-  useEffect(function pauseWhenLeavingQrTabEffect() {
+  useEffect(function pauseWhenLeavingScreenEffect() {
     if (isFocused) {
       return;
     }

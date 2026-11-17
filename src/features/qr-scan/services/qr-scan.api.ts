@@ -6,6 +6,10 @@ import type {
   QrResolveRequest,
   ResolvedQrAudio,
 } from "../types/qr-scan.types";
+import {
+  getApiBaseUrl,
+  normalizeBackendAssetUrl,
+} from "@/services/api-base-url";
 
 /** Kiểm tra JSON object trước khi đọc field từ response chưa tin cậy. */
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -28,33 +32,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Địa chỉ backend phải đến từ môi trường chạy Mobile.
  * Không được dùng localhost khi điện thoại thật kết nối tới backend trên PC.
  */
-export function getApiBaseUrl(): string {
-  const configuredUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-  if (typeof configuredUrl !== "string") {
-    throw new Error("Chưa cấu hình EXPO_PUBLIC_API_BASE_URL cho Mobile.");
-  }
-
-  if (configuredUrl.trim().length === 0) {
-    throw new Error("EXPO_PUBLIC_API_BASE_URL đang trống.");
-  }
-
-  let parsedUrl: URL;
-
-  try {
-    parsedUrl = new URL(configuredUrl.trim());
-  } catch (cause) {
-    throw new Error("EXPO_PUBLIC_API_BASE_URL không phải URL hợp lệ.");
-  }
-
-  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-    throw new Error("API Base URL phải dùng HTTP hoặc HTTPS.");
-  }
-
-  // Chỉ dùng origin; service tự nối path /api/v1, tránh lặp đường dẫn.
-  return parsedUrl.origin;
-}
-
 /** Trích lỗi backend thành thông báo dễ hiểu, không coi mọi lỗi là lỗi QR. */
 async function getRequestError(response: Response): Promise<Error> {
   let serverDetail = "";
@@ -89,28 +66,11 @@ async function getRequestError(response: Response): Promise<Error> {
  * Không sửa URL HTTPS/CDN thật của production.
  */
 function normalizeAudioUrl(rawAudioUrl: string, apiBaseUrl: string): string {
-  let audioUrl: URL;
-  let apiUrl: URL;
-
   try {
-    audioUrl = new URL(rawAudioUrl);
-    apiUrl = new URL(apiBaseUrl);
+    return normalizeBackendAssetUrl(rawAudioUrl, apiBaseUrl);
   } catch (cause) {
     throw new Error("Backend trả về audio_url không hợp lệ.");
   }
-
-  if (audioUrl.protocol !== "http:" && audioUrl.protocol !== "https:") {
-    throw new Error("audio_url phải sử dụng HTTP hoặc HTTPS.");
-  }
-
-  if (audioUrl.hostname === "localhost" || audioUrl.hostname === "127.0.0.1") {
-    if (apiUrl.hostname !== "localhost" && apiUrl.hostname !== "127.0.0.1") {
-      audioUrl.protocol = apiUrl.protocol;
-      audioUrl.host = apiUrl.host;
-    }
-  }
-
-  return audioUrl.toString();
 }
 
 /** Kiểm tra các field thực sự dùng cho việc xác định audio trước khi đưa cho UI. */
@@ -131,12 +91,13 @@ function mapResolvedAudio(
     throw new Error("Response QR thiếu nội dung thuyết minh.");
   }
 
-  if (!isRecord(rawResponse.narration.audio)) {
+  const poi = rawResponse.poi;
+  const narration = rawResponse.narration;
+
+  if (!isRecord(narration.audio)) {
     throw new Error("Response QR thiếu audio đã xuất bản.");
   }
 
-  const poi = rawResponse.poi;
-  const narration = rawResponse.narration;
   const audio = narration.audio;
 
   if (typeof poi.id !== "string" || typeof poi.poi_name !== "string") {
@@ -205,7 +166,7 @@ export async function resolveQrAudio(
     throw new Error("Mã ngôn ngữ phải gồm 2 hoặc 3 chữ cái, ví dụ vi hoặc en.");
   }
 
-  const apiBaseUrl = getApiBaseUrl();
+  const apiBaseUrl = await getApiBaseUrl();
   const requestBody: QrResolveRequest = {
     qr_code: qrCode,
     language_code: languageCode,
