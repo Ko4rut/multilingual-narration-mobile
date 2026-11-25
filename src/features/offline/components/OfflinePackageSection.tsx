@@ -135,6 +135,10 @@ export function OfflinePackageSection() {
   const hasFilters = Object.values(discovery.filters).some(function hasValue(value) {
     return value !== null;
   });
+  let loadMoreOpacity = 1;
+  if (discovery.isLoading) {
+    loadMoreOpacity = 0.6;
+  }
 
   return (
     <View style={[styles.section, { marginTop: theme.spacing.lg }]}>
@@ -238,7 +242,7 @@ export function OfflinePackageSection() {
               borderColor: theme.colors.border,
               borderRadius: theme.radius.md,
               padding: theme.spacing.md,
-              opacity: Number(!discovery.isLoading) * 0.4 + 0.6,
+              opacity: loadMoreOpacity,
             },
           ]}
         >
