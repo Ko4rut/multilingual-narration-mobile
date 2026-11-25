@@ -50,9 +50,11 @@ export function useOfflinePackageDiscovery() {
       })
       .catch(function handleCatalogError(cause: unknown) {
         if (!controller.signal.aborted) {
-          setCatalogError(
-            cause instanceof Error ? cause.message : "Không tải được bộ lọc.",
-          );
+          let message = "Không tải được bộ lọc.";
+          if (cause instanceof Error) {
+            message = cause.message;
+          }
+          setCatalogError(message);
         }
       })
       .finally(function finishCatalogLoading() {
@@ -101,9 +103,11 @@ export function useOfflinePackageDiscovery() {
       })
       .catch(function handlePackageError(cause: unknown) {
         if (!controller.signal.aborted) {
-          setErrorMessage(
-            cause instanceof Error ? cause.message : "Không tải được các gói offline.",
-          );
+          let message = "Không tải được các gói offline.";
+          if (cause instanceof Error) {
+            message = cause.message;
+          }
+          setErrorMessage(message);
         }
       })
       .finally(function finishPackageLoading() {

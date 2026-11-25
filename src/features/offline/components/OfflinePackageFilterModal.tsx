@@ -103,6 +103,10 @@ function FilterOptionRow({
   onPress(): void;
 }) {
   const theme = useTheme();
+  let backgroundColor = theme.colors.card;
+  if (selected) {
+    backgroundColor = theme.colors.primaryLight;
+  }
 
   return (
     <Pressable
@@ -114,7 +118,7 @@ function FilterOptionRow({
         styles.option,
         {
           borderRadius: theme.radius.md,
-          backgroundColor: selected ? theme.colors.primaryLight : theme.colors.card,
+          backgroundColor,
           padding: theme.spacing.md,
         },
       ]}

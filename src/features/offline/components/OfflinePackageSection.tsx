@@ -72,6 +72,10 @@ function FilterButton({
   onPress(): void;
 }) {
   const theme = useTheme();
+  let opacity = 1;
+  if (disabled) {
+    opacity = 0.6;
+  }
   return (
     <Pressable
       accessibilityLabel={title + ": " + value}
@@ -86,7 +90,7 @@ function FilterButton({
           borderColor: theme.colors.border,
           borderRadius: theme.radius.md,
           padding: theme.spacing.sm + theme.spacing.xs,
-          opacity: disabled ? 0.6 : 1,
+          opacity,
         },
       ]}
     >
@@ -117,9 +121,10 @@ export function OfflinePackageSection() {
     }
   }
 
-  const currentConfig = activePicker === null
-    ? null
-    : getFilterConfig(activePicker, discovery.catalog);
+  let currentConfig: FilterConfig | null = null;
+  if (activePicker !== null) {
+    currentConfig = getFilterConfig(activePicker, discovery.catalog);
+  }
 
   let selectedPickerId: string | null = null;
   if (activePicker !== null) {
@@ -233,13 +238,14 @@ export function OfflinePackageSection() {
               borderColor: theme.colors.border,
               borderRadius: theme.radius.md,
               padding: theme.spacing.md,
-              opacity: discovery.isLoading ? 0.6 : 1,
+              opacity: Number(!discovery.isLoading) * 0.4 + 0.6,
             },
           ]}
         >
-          {discovery.isLoadingMore
-            ? <ActivityIndicator color={theme.colors.primary} />
-            : <ThemedText style={[theme.typography.label, { color: theme.colors.primaryDark }]}>Xem thêm gói</ThemedText>}
+          {discovery.isLoadingMore && <ActivityIndicator color={theme.colors.primary} />}
+          {!discovery.isLoadingMore && (
+            <ThemedText style={[theme.typography.label, { color: theme.colors.primaryDark }]}>Xem thêm gói</ThemedText>
+          )}
         </Pressable>
       )}
 
