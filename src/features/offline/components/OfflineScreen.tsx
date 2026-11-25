@@ -14,6 +14,7 @@ import { getBundledGlyphsStatus, type BundledGlyphsStatus } from "../services/bu
 import { getBundledMapStatus, type BundledMapStatus } from "../services/bundledMap";
 import { useDeviceStorage } from "../hooks/useDeviceStorage";
 import { DeviceStorageCard } from "./DeviceStorageCard";
+import { OfflinePackageSection } from "./OfflinePackageSection";
 
 interface InstalledMapState {
   map: BundledMapStatus;
@@ -70,8 +71,12 @@ export default function OfflineScreen() {
       >
         <ThemedText style={theme.typography.title}>Bản đồ ngoại tuyến</ThemedText>
         <ThemedText color="textSecondary" style={styles.description}>
-          Bản đồ và font đã được đóng gói trong bản cài đặt Android.
-          Việc chuẩn bị file cục bộ không cần tải tile từ Internet.
+          Bản đồ nền đã được đóng gói sẵn trong ứng dụng. Bạn có thể khám phá
+          các gói thuyết minh đã phát hành từ Backend ở bên dưới.
+        </ThemedText>
+        <OfflinePackageSection />
+        <ThemedText style={[theme.typography.heading, { marginTop: theme.spacing.xl }]}>
+          Bản đồ trên thiết bị
         </ThemedText>
         <DeviceStorageCard
           storage={deviceStorage.storage}
